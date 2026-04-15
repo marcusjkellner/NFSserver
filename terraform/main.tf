@@ -150,7 +150,8 @@ resource "null_resource" "test_controller_to_fileserver" {
   depends_on = [
     proxmox_virtual_environment_vm.controller,
     proxmox_virtual_environment_vm.fileserver,
-	  proxmox_virtual_environment_vm.clientLegal
+	  proxmox_virtual_environment_vm.clientLegal,
+    proxmox_virtual_environment_vm.clientSales
   ]
 
   connection {
@@ -167,6 +168,10 @@ resource "null_resource" "test_controller_to_fileserver" {
 	  
 	  "ssh-keyscan -H ${split("/", var.clientLegal_ip)[0]} >> ~/.ssh/known_hosts",
       "ssh -i ~/.ssh/id_ed25519 ${var.clientLegal_username}@${split("/", var.clientLegal_ip)[0]} 'echo === SSH TEST SUCCESSFUL: Controller reached Client Legal! ==='",
+    
+    "ssh-keyscan -H ${split("/", var.clientSales_ip)[0]} >> ~/.ssh/known_hosts",
+      "ssh -i ~/.ssh/id_ed25519 ${var.clientSales_username}@${split("/", var.clientSales_ip)[0]} 'echo === SSH TEST SUCCESSFUL: Controller reached Client Sales! ==='",
+    
     ]
   }
 }
