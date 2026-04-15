@@ -4,7 +4,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
   vm_id     = var.controller_vmid
 
   clone {
-    vm_id = 200
+    vm_id = var.VMTemplateID
     full  = true
   }
 
@@ -62,7 +62,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
 data "external" "controller_pubkey" {
   depends_on = [proxmox_virtual_environment_vm.controller]
 
-  program = [
+  program = var.os_type == "windows" ? [
     "powershell.exe",
     "-NoProfile",
     "-Command",
@@ -72,8 +72,16 @@ data "external" "controller_pubkey" {
       $key = (& $ssh -o StrictHostKeyChecking=accept-new -i "$HOME\.ssh\id_ed25519" "${var.controller_username}@$ip" "cat ~/.ssh/id_ed25519.pub" | Out-String).Trim()
       @{ key = $key } | ConvertTo-Json -Compress
     EOT
+  ] : [
+    "bash",
+    "-c",
+    <<-EOT
+      KEY=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ${var.controller_username}@${split("/", var.controller_ip)[0]} "cat ~/.ssh/id_ed25519.pub")
+      echo "{\"key\": \"$KEY\"}"
+    EOT
   ]
 }
+
 
 resource "proxmox_virtual_environment_vm" "fileserver" {
   depends_on = [proxmox_virtual_environment_vm.controller]
@@ -83,7 +91,7 @@ resource "proxmox_virtual_environment_vm" "fileserver" {
   vm_id     = var.fileserver_vmid
 
   clone {
-    vm_id = 200
+    vm_id = var.VMTemplateID
     full  = true
   }
 
@@ -115,7 +123,6 @@ resource "proxmox_virtual_environment_vm" "fileserver" {
     }
     user_account {
       username = var.fileserver_username
-      # Both your Mac key AND controller's key
       keys = [
         var.ssh_public_key,
         data.external.controller_pubkey.result["key"]

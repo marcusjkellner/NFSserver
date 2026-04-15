@@ -1,5 +1,6 @@
-
-
+variable "os_type" {
+  type    = string
+}
 
 variable "api_token" {
   type      = string
