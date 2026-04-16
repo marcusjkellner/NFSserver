@@ -1,12 +1,21 @@
 ---
-name: Configure Fileserver
-hosts: fileserver
-become: true
-tasks:
-  - name: Update apt cache
-    ansible.builtin.apt:
-      update_cache: true
+- name: Configure Fileserver
+  hosts: fileserver
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+    
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== Fileserver Updated! =="
 
-  - name: Show done message
-    ansible.builtin.debug:
-      msg: "=== Fileserver Updated! =="
+    - name: Install NFS server
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== NFS installed on Fileserver! =="
