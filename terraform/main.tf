@@ -105,7 +105,7 @@ resource "proxmox_virtual_environment_vm" "fileserver" {
 
   disk {
     datastore_id = "local-lvm"
-    size         = 10
+    size         = 20
     interface    = "scsi0"
   }
 

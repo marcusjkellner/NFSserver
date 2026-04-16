@@ -20,7 +20,7 @@ resource "proxmox_virtual_environment_vm" "clientLegal" {
 
   disk {
     datastore_id = "local-lvm"
-    size         = 20
+    size         = 10
     interface    = "scsi0"
   }
 
@@ -81,7 +81,7 @@ resource "proxmox_virtual_environment_vm" "clientSales" {
 
   disk {
     datastore_id = "local-lvm"
-    size         = 20
+    size         = 10
     interface    = "scsi0"
   }
 
