@@ -45,5 +45,5 @@
 
     # Print done mesg
     - name: Debug msg done
-      ansible.builtin.debug
+      ansible.builtin.debug:
         msg: "==== Directories are exported and NFS service enabled! ===="
