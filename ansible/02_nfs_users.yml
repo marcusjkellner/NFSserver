@@ -1,0 +1,40 @@
+---
+- name: Configure users and groups
+  hosts: fileserver
+  become: true
+  
+  
+  tasks:
+  # Create usergroup: Legal and Sales
+    - name: User group Legal
+      ansible.builtin.group:
+        name: group-Legal
+        state: present
+
+    - name: User group Sales
+      ansible.builtin.group:
+        name: group-Sales
+        state: present
+
+
+  #Create users: Anna_Legal, Peter_Sales on the filserver
+    - name: Create user Anna_Legal
+      ansible.builtin.user:
+        name: Anna_Legal
+        groups: group-Legal
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Create user Peter_Sales
+      ansible.builtin.user:
+        name: Peter_Sales
+        groups: group-Sales
+        shell: /bin/bash
+        create_home: yes
+
+
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== Group: Legal and Sales & Users: Anna and Peter created! =="
+
+    
