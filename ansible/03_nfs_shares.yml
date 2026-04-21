@@ -6,7 +6,7 @@
   tasks:
   # Create share directories
     - name: Cretae /shares
-      ansible.builtin.group:
+      ansible.builtin.file:
         name: /shares
         state: directory
         owner: root
@@ -15,8 +15,8 @@
 
     
     - name: Cretae /shares/Common
-      ansible.builtin.group:
-        name: /shares/common
+      ansible.builtin.file:
+        name: /shares/Common
         state: directory
         owner: root
         group: users
@@ -24,7 +24,7 @@
 
 
     - name: Cretae /shares/Legal
-      ansible.builtin.group:
+      ansible.builtin.file:
         name: /shares/Legal
         state: directory
         owner: root
@@ -33,7 +33,7 @@
 
 
     - name: Cretae /shares/Sales
-      ansible.builtin.group:
+      ansible.builtin.file:
         name: /shares/Sales
         state: directory
         owner: root
