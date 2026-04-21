@@ -5,7 +5,7 @@
   
   tasks:
   # Create share directories
-    - name: Cretae /shares
+    - name: Create /shares
       ansible.builtin.file:
         name: /shares
         state: directory
@@ -14,7 +14,7 @@
         mode: '0755'
 
     
-    - name: Cretae /shares/Common
+    - name: Create /shares/Common
       ansible.builtin.file:
         name: /shares/Common
         state: directory
@@ -23,7 +23,7 @@
         mode: '0775'
 
 
-    - name: Cretae /shares/Legal
+    - name: Create /shares/Legal
       ansible.builtin.file:
         name: /shares/Legal
         state: directory
@@ -32,7 +32,7 @@
         mode: '0770'
 
 
-    - name: Cretae /shares/Sales
+    - name: Create /shares/Sales
       ansible.builtin.file:
         name: /shares/Sales
         state: directory

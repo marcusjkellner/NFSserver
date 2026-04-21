@@ -65,6 +65,40 @@ RAM: 2048 MB
 Cores: 2
 Disk: 10
 
+# Ansible playbooks
+01_nfs_install
+    Updates the system with apt update and downloads nfs filserver.
+
+02_nfs_users
+    Creates two user groups: Legal and Sales.
+    Creates two different users, one for Legal, (Anna_Legal) and one for Sales (Peter_Sales)
+
+03_nfs_shares
+    Creates three directory types: 
+        /shares
+            mode: 0755
+                Root can read, write, enter
+                Legal and Sales can read, enter, not write
+                Others can read, enter, not write
+        /shares/Common 
+            mode: 0775
+                Root can read, write, enter
+                Legal and Sales can read, write, enter
+                Others can read, write, enter
+        /shares/Legal
+            mode: 0770
+                Root can read, write, enter
+                Legal can read, write, enter
+                Others blocked
+        /shares/Sales
+            mode: 0770
+                Root can read, write, enter
+                Sales can read, write, enter
+                Others blocked
+
+04_nfs_exports
+    Configures a permanent directory 'exports' that tells the NFS server the direcories to share and who can acess them, it also reloads the changed configuration and starts the the NFS server service.
+
 
 # Security
 It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms.

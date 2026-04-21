@@ -25,7 +25,7 @@
         state: present
         
           # Add /Sales folder to export
-    - name: Add /Legal to NFS exports
+    - name: Add /Sales to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
         line: "/shares/Sales {{ client_network}}(rw,sync,no_subtree_check)"
