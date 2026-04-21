@@ -13,7 +13,7 @@
     - name: Add /Common to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
-        line: "/shares/Common {{ client_network}}(rw, sync,no_subtree_check)"
+        line: "/shares/Common {{ client_network}}(rw,sync,no_subtree_check)"
         state: present
         create: yes
 
@@ -21,14 +21,14 @@
     - name: Add /Legal to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
-        line: "/shares/Legal {{ client_network}}(rw, sync,no_subtree_check)"
+        line: "/shares/Legal {{ client_network}}(rw,sync,no_subtree_check)"
         state: present
         
           # Add /Sales folder to export
     - name: Add /Legal to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
-        line: "/shares/Sales {{ client_network}}(rw, sync,no_subtree_check)"
+        line: "/shares/Sales {{ client_network}}(rw,sync,no_subtree_check)"
         state: present
 
 
