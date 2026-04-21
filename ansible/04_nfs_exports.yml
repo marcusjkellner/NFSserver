@@ -1,0 +1,49 @@
+---
+- name: Configure NFS exports on Fileserver
+  hosts: fileserver
+  become: true
+  vars:
+    client_network: "{{ ansible_default_ipv4_network}}/{{ ansible_default_ipv4.prefix}}"
+
+  tasks:
+    # Configure NFS exports
+
+    # Add /Common folder to export
+    - name: Add /Common to NFS exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "/shares/Common {{ client_network}} (rw, sync,no_subtree_check)"
+        state: present
+        create: yes
+
+        # Add /Legal folder to export
+    - name: Add /Legal to NFS exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "/shares/Legal {{ client_network}} (rw, sync,no_subtree_check)"
+        state: present
+        
+          # Add /Sales folder to export
+    - name: Add /Legal to NFS exports
+      ansible.builtin.lineinfile:
+        path: /etc/exports
+        line: "/shares/Sales {{ client_network}} (rw, sync,no_subtree_check)"
+        state: present
+
+
+    # Applying the exports
+    - name: Apply NFS exports
+      ansible.builtin.command: exportfs -ra
+
+
+    # Start NFS service on Fileserver
+    - name: Start and enable NFS
+      ansible.builtin.service:
+        name: nfs-kernel-server
+        state: started
+        enabled: yes
+
+    # Print done mesg
+    - name: Debug msg done
+      ansible.builtin.debug
+        msg: "==== Directories are exported and NFS service enabled! ===="
