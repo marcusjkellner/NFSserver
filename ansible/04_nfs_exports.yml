@@ -3,7 +3,7 @@
   hosts: fileserver
   become: true
   vars:
-    client_network: "{{ ansible_default_ipv4_network}}/{{ ansible_default_ipv4.prefix}}"
+    client_network: "{{ ansible_default_ipv4.network}}/{{ ansible_default_ipv4.prefix}}"
 
   tasks:
     # Configure NFS exports
