@@ -3,7 +3,8 @@
   hosts: fileserver
   become: true
   vars:
-    client_network: "{{ ansible_default_ipv4.network}}/{{ ansible_default_ipv4.prefix}}"
+    client_network: "{{ ansible_default_ipv4.network}}/24"
+    #for now, /24 is a hardcoded prefix, lift out to terraform.tfvars later
 
   tasks:
     # Configure NFS exports
