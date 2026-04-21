@@ -1,0 +1,53 @@
+- name: Configure shares on Fileserver
+  hosts: fileserver
+  become: true
+  
+  
+  tasks:
+  # Create share directories
+    - name: Cretae /shares
+      ansible.builtin.group:
+        name: /shares
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    
+    - name: Cretae /shares/Common
+      ansible.builtin.group:
+        name: /shares/common
+        state: directory
+        owner: root
+        group: users
+        mode: '0775'
+
+
+    - name: Cretae /shares/Legal
+      ansible.builtin.group:
+        name: /shares/Legal
+        state: directory
+        owner: root
+        group: group-Legal
+        mode: '0770'
+
+
+    - name: Cretae /shares/Sales
+      ansible.builtin.group:
+        name: /shares/Sales
+        state: directory
+        owner: root
+        group: group-Sales
+        mode: '0770'
+      
+  
+  # 0775: owner+group can read/write, others can read, 
+  # 0770: owner+group can read/write, others have NO access
+
+
+    
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== Shared directories created! =="
+
+    
