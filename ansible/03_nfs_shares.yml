@@ -39,43 +39,8 @@
         owner: root
         group: group-Sales
         mode: '0770'
-      
-  
-  # 0775: owner+group can read/write, others can read, 
-  # 0770: owner+group can read/write, others have NO access
-
-    - name: Enable quota in fstab
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        regexp: '/shares'
-        line: '/shares none bind, usrquota,grupquota 0 0'
-        state: present
-
-    - name: Create quota files
-      ansible.builtin.command: quotacheck -cugm /shares
-      changed_when: false
-
-    - name: Turn on quotas
-      ansible.builtin.command: quotaon -ug /shares
-      changed_when: false
-      ignore_errors: yes
-
-    - name: Set quota for group-Legal
-      ansible.builtin.command: setquota -g group-Legal 4800000 5000000 0 0 /shares
-      changed_when: false
-
-    - name: Set quota for group-Sales
-      ansible.builtin.command: setquota -g group-Sales 4800000 5000000 0 0 /shares
-      changed_when: false
-
-    - name: Set quota for Anna_Legal
-      ansible.builtin.command: setquota -u Anna_Legal 1000000 1200000 0 0 /shares
-      changed_when: false
-
-    - name: Set quota for Peter_Sales
-      ansible.builtin.command: setquota -u Peter_Sales 1000000 1200000 0 0 /shares
-      changed_when: false
-    
+        
+ 
     - name: Show done message
       ansible.builtin.debug:
         msg: "=== Shared directories created! =="
