@@ -1,40 +1,57 @@
 ---
-- name: Configure users and groups
+- name: Configure users, user groups and set quotas
   hosts: fileserver
   become: true
   
   
   tasks:
-  # Create usergroup: Legal and Sales
+  # Create Legal user group and set a group quota
     - name: User group Legal
       ansible.builtin.group:
         name: group-Legal
         state: present
 
+    - name: Set quota for group-Legal
+      ansible.builtin.command: setquota -u group-Legal 4800000 5000000 0 0 /shares
+      changed_when: false
+
+  # Create Sales user group and set a group quota
     - name: User group Sales
       ansible.builtin.group:
         name: group-Sales
         state: present
 
+    - name: Set quota for group-Sales
+      ansible.builtin.command: setquota -u group-Sales 4800000 5000000 0 0 /shares
+      changed_when: false
 
-  #Create users: Anna_Legal, Peter_Sales on the filserver
+  #Create Legal users and give them a personal quota
     - name: Create user Anna_Legal
       ansible.builtin.user:
         name: Anna_Legal
-        groups: group-Legal
+        groups: group-Legal, users
         shell: /bin/bash
         create_home: yes
 
+    - name: Set quota for Anna_Legal
+      ansible.builtin.command: setquota -u Anna_Legal 1000000 1200000 0 0 /shares
+      changed_when: false
+
+  #Create Sales users and give them a personal quota
     - name: Create user Peter_Sales
       ansible.builtin.user:
         name: Peter_Sales
-        groups: group-Sales
+        groups: group-Sales, users
         shell: /bin/bash
         create_home: yes
-        
+
+    - name: Set quota for Peter_Sales
+      ansible.builtin.command: setquota -u Peter_Sales 1000000 1200000 0 0 /shares
+      changed_when: false
+
 
     - name: Show done message
       ansible.builtin.debug:
-        msg: "=== Group: Legal and Sales & Users: Anna and Peter created! =="
+        msg: "=== Group: Legal and Sales & Users: Anna and Peter created and quotes are set! =="
 
     

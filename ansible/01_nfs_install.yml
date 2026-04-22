@@ -3,19 +3,23 @@
   hosts: fileserver
   become: true
   tasks:
+    # Update system files
     - name: Update apt cache
       ansible.builtin.apt:
-        update_cache: true # this be reported as changed by ansible, the package managed is refreshed
+        update_cache: true
+        changed_when: false
 
-    - name: Show done message
-      ansible.builtin.debug:
-        msg: "=== Fileserver Updated! =="
-
+  # Install NFS and quote Tools 
     - name: Install NFS server
       ansible.builtin.apt:
         name: nfs-kernel-server
         state: present
 
+    - name: Install quota tools
+      ansible.builtin.apt:
+        name: quota
+        state: present
+
     - name: Show done message
       ansible.builtin.debug:
-        msg: "=== NFS installed on Fileserver! =="
+        msg: "=== NFS and Quota tools installed on Fileserver! =="
