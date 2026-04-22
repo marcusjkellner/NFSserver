@@ -12,7 +12,7 @@
         state: present
 
     - name: Set quota for group-Legal
-      ansible.builtin.command: setquota -u group-Legal 4800000 5000000 0 0 /shares
+      ansible.builtin.command: setquota -g group-Legal 4800000 5000000 0 0 /shares
       changed_when: false
 
   # Create Sales user group and set a group quota
@@ -22,7 +22,7 @@
         state: present
 
     - name: Set quota for group-Sales
-      ansible.builtin.command: setquota -u group-Sales 4800000 5000000 0 0 /shares
+      ansible.builtin.command: setquota -g group-Sales 4800000 5000000 0 0 /shares
       changed_when: false
 
   #Create Legal users and give them a personal quota
