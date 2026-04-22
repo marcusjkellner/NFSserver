@@ -32,8 +32,8 @@
         fstype: nfs
         opts: rw,sync,hard
         state: mounted
-        
+
         
     - name: Show the control message
-      ansible.built.debug:
+      ansible.builtin.debug:
         msg: "==NFS shares are mounted=="
