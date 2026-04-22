@@ -25,13 +25,16 @@
 
   # Mounts /shares at the disk with the quota support
     - name: Mount /shares with quota support
-      ansible.builtin.mount:
-        path: /shares
-        src: /dev/sdb1
-        fstype: ext4
-        opts: defaults,usrquota,grpquo ta
-        state: mounted
+      ansible.builtin.command: mount -o defaults,usrquota,grpquota /dev/sdb1 /shares
+      changed_when: false
+      ignore_errors: yes
 
+
+    - name: Add /shares to fstab for auto mount on reboot
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "/dev/sdb1 /shares ext4 defaults,usrquota,grpquota 0 2"
+        state: present
 
     - name: Show done message
       ansible.builtin.debug:

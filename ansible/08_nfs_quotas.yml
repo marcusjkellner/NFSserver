@@ -5,14 +5,6 @@
   
   
   tasks:
-  
-    - name: Enable quota in fstab
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        regexp: '/shares'
-        line: '/shares none bind,usrquota,grpquota 0 0'
-        state: present
-
     - name: Remount /shares to apply quota options
       ansible.builtin.command: mount -o remount /shares
       changed_when: false
