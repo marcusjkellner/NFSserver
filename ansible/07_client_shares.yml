@@ -1,0 +1,39 @@
+---
+- name: Create NFS shares on clients
+  hosts: clients
+  become: true
+
+  tasks:
+    - name: Mount Common shares
+      ansible.builtin.mount:
+        path: /mnt/Common
+        src: "{{ hostvars[groups['fileserver'][0]]['ansible_host'] }}:/shares/Common"
+        fstype: nfs
+        opts: rw,sync,hard
+        state: mounted
+
+# hard  = never give up if server goes down
+# sync = wait until the file is saved before confirming
+
+
+    - name: Mount Legal shares
+      ansible.builtin.mount:
+        path: /mnt/Legal
+        src: "{{ hostvars[groups['fileserver'][0]]['ansible_host'] }}:/shares/Legal"
+        fstype: nfs
+        opts: rw,sync,hard
+        state: mounted
+
+
+    - name: Mount Sales shares
+      ansible.builtin.mount:
+        path: /mnt/Sales
+        src: "{{ hostvars[groups['fileserver'][0]]['ansible_host'] }}:/shares/Sales"
+        fstype: nfs
+        opts: rw,sync,hard
+        state: mounted
+        
+        
+    - name: Show the control message
+      ansible.built.debug:
+        msg: "==NFS shares are mounted=="
