@@ -8,10 +8,12 @@
     - name: Create partition on second disk
       ansible.builtin.command: parted /dev/sdb --script mklabel gpt mkpart primary ext4 0% 100%
       changed_when: false
+      ignore_errors: yes
 
     - name: Format partition
       ansible.builtin.command: mkfs.ext4 /dev/sdb1
       changed_when: false
+      ignore_errors: yes
 
 
   # Create /shares directories
