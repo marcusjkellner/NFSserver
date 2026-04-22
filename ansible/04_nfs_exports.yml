@@ -34,7 +34,8 @@
 
     # Applying the exports
     - name: Apply NFS exports
-      ansible.builtin.command: exportfs -ra
+      ansible.builtin.command: exportfs -ra # Note: this will always be reported as "changed" by Ansible
+      
 
 
     # Start NFS service on Fileserver

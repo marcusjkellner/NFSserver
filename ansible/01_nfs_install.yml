@@ -5,8 +5,8 @@
   tasks:
     - name: Update apt cache
       ansible.builtin.apt:
-        update_cache: true
-    
+        update_cache: true # this be reported as changed by ansible, the package managed is refreshed
+
     - name: Show done message
       ansible.builtin.debug:
         msg: "=== Fileserver Updated! =="
