@@ -44,6 +44,13 @@
   # 0775: owner+group can read/write, others can read, 
   # 0770: owner+group can read/write, others have NO access
 
+    - name: Enable quota in fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '/shares'
+        line: '/shares none bind, usrquota,grupquota 0 0'
+        state: present
+
     - name: Create quota files
       ansible.builtin.command: quotacheck -cugm /shares
       changed_when: false
