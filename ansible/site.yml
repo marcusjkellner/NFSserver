@@ -6,3 +6,4 @@
 - import_playbook: 05_client_install.yml
 - import_playbook: 06_client_mount.yml
 - import_playbook: 07_client_shares.yml
+- import_playbook: 08_nfs_quotas.yml
