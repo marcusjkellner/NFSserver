@@ -103,10 +103,18 @@ resource "proxmox_virtual_environment_vm" "fileserver" {
     dedicated = 2048
   }
 
+# os disk
   disk {
     datastore_id = "local-lvm"
-    size         = 20
+    size         = 10
     interface    = "scsi0"
+  }
+
+# disk for /shares
+  disk {
+    datastore_id = "local-lvm"
+    size         = 10
+    interface    = "scsi1"
   }
 
   network_device {
