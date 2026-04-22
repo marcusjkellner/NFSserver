@@ -1,0 +1,12 @@
+---
+- name: Create mount on clients
+  hosts: clients
+  become: true
+
+  tasks:
+
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== clients have their mounts created =="
+
+        # Kan vi skriva ut varje klients hostname här? Det hade varit snyggt!
