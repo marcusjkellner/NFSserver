@@ -4,16 +4,6 @@
   
   
   tasks:
-  # Create share directories
-    - name: Create /shares
-      ansible.builtin.file:
-        name: /shares
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    
     - name: Create /shares/Common
       ansible.builtin.file:
         name: /shares/Common

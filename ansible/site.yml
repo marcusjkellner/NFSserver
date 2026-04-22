@@ -1,7 +1,8 @@
 ---
 - import_playbook: 01_nfs_install.yml
 - import_playbook: 02_nfs_users.yml
-- import_playbook: 03_nfs_shares.yml
+- import_playbook: 03a_nfs_setup_disk.yml
+- import_playbook: 03b_nfs_shares.yml
 - import_playbook: 04_nfs_exports.yml
 - import_playbook: 05_client_install.yml
 - import_playbook: 06_client_mount.yml
