@@ -1,49 +1,43 @@
 ---
 - name: Configure users, user groups and set quotas
-  hosts: fileserver
-  become: true
-  
+  hosts: fileserver:clients
+  become: true  
   
   tasks:
-  # Create Legal user group and set a group quota
+  # Create Legal user group
     - name: User group Legal
       ansible.builtin.group:
         name: group-Legal
+        gid: 2001
         state: present
 
-
-
-  # Create Sales user group and set a group quota
+  # Create Sales user group
     - name: User group Sales
       ansible.builtin.group:
         name: group-Sales
+        gid: 2002
         state: present
 
-
-
-  #Create Legal users and give them a personal quota
+  #Create Legal users 
     - name: Create user Anna_Legal
       ansible.builtin.user:
         name: Anna_Legal
+        uid: 3001
         groups: group-Legal, users
         shell: /bin/bash
         create_home: yes
 
-
-
-  #Create Sales users and give them a personal quota
+  #Create Sales users 
     - name: Create user Peter_Sales
       ansible.builtin.user:
         name: Peter_Sales
+        uid: 3002
         groups: group-Sales, users
         shell: /bin/bash
         create_home: yes
 
-
-
-
     - name: Show done message
       ansible.builtin.debug:
-        msg: "=== Group: Legal and Sales & Users: Anna and Peter created and quotes are set! =="
+        msg: "=== Group: Legal and Sales & Users: Anna and Peter created! =="
 
     
