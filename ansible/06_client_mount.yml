@@ -8,19 +8,16 @@
       ansible.builtin.file:
         name: /mnt/Common
         state: directory
-        mode: '0755'
   
     - name: Create mount point for /Legal
       ansible.builtin.file:
         name: /mnt/Legal
         state: directory
-        mode: '0755'
 
     - name: Create mount point for /Sales
       ansible.builtin.file:
         name: /mnt/Sales
-        state: directory
-        mode: '0755'      
+        state: directory     
 
     - name: Show done message
       ansible.builtin.debug:
