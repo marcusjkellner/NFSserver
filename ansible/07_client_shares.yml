@@ -7,7 +7,7 @@
     - name: Mount Common shares
       ansible.builtin.mount:
         path: /mnt/Common
-        src: "{{ hostvars[groups['fileserver'][0]]['ansible_host'] }}:/shares/Common"
+        src: "{{ groups['fileserver'][0] }}:/shares/Common"
         fstype: nfs
         opts: rw,sync,hard
         state: mounted
@@ -19,7 +19,7 @@
     - name: Mount Legal shares
       ansible.builtin.mount:
         path: /mnt/Legal
-        src: "{{ hostvars[groups['fileserver'][0]]['ansible_host'] }}:/shares/Legal"
+        src: "{{ groups['fileserver'][0] }}:/shares/Legal"
         fstype: nfs
         opts: rw,sync,hard
         state: mounted
@@ -28,7 +28,7 @@
     - name: Mount Sales shares
       ansible.builtin.mount:
         path: /mnt/Sales
-        src: "{{ hostvars[groups['fileserver'][0]]['ansible_host'] }}:/shares/Sales"
+        src: "{{ groups['fileserver'][0] }}:/shares/Sales"
         fstype: nfs
         opts: rw,sync,hard
         state: mounted
