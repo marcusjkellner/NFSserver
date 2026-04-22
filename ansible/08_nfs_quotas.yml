@@ -10,8 +10,12 @@
       ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '/shares'
-        line: '/shares none bind, usrquota,grupquota 0 0'
+        line: '/shares none bind,usrquota,grpquota 0 0'
         state: present
+
+    - name: Remount /shares to apply quota options
+      ansible.builtin.command: mount -o remount /shares
+      changed_when: false
 
     - name: Create quota files
       ansible.builtin.command: quotacheck -cugm /shares
