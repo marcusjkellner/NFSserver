@@ -26,7 +26,8 @@ This is the first VM we create in terraform. The other VM's are dependant on thi
 The ansible-controller generates an SSH keypair and injects the public key into Terraform so the following VM's will allow the
 controller to SSH into them with Ansible.
 
-On creatation, the system is updated and ansibler is installed.
+On creatation, the system is updated and ansible is installed.
+After this, ansible galaxy is forced to update to 2.5.9 and the old version 1.3.6 is removed.
 Terrform will also git clone our public repository in order to access the ansible code.
 The last Terraform action is to create a dynamic inventory.ini-file based on the local IP-addresses we have enetered into a secret variable file called terraform.tfvars.
 
@@ -91,6 +92,7 @@ Disk: 10
 03a_nfs_setup_disk
     Creates a new partition and formats it for use with the quote-system. 
     Creates the /shares directory on the new partition and mounts /shares for file storage.
+    There are checks that measures if the disk is present and have been formatted at least once in order to preserve ideompotency.
         /shares
             mode: 0755
                 Root can read, write, enter
@@ -136,14 +138,16 @@ Disk: 10
         /mnt/Sales > fileserver /shares/Sales
 
 08_nfs_quotas
-    This is a work in progress that is working as a prototype but throws errors at this point in time.
+    At this point in time, we are able to set quotes for groups but it seems users are still not getting limited.
+    This playbook remounts /shares on the fileserver and sets quotas for both groups and users. 
+
         Remounts /shares to apply quota options 
         Create quota files
         Turn the quotas on
         Set quote for group-Legal max 5GB
         Set quote for group-Sales max 5GB
-        Set quote for Anna_Legal max 1.2 GB
-        Set quote for Peter_Sales max 1.2 GB
+        Set quote for Anna_Legal max 1.2 GB #Not Active
+        Set quote for Peter_Sales max 1.2 GB #Not Active
 
 # Security
 It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms.
@@ -159,8 +163,3 @@ While we never upload this information to github it would be better to use hashi
 Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.
 
 We also note that currently there is no authentication for users Anna_Legal and Peter_Sales, we could add it to separate secrets later on.
-
-
-
-
-
