@@ -138,8 +138,9 @@ Disk: 10
         /mnt/Sales > fileserver /shares/Sales
 
 08_nfs_quotas
-    At this point in time, we are able to set quotes for groups but it seems users are still not getting limited.
+
     This playbook remounts /shares on the fileserver and sets quotas for both groups and users. 
+    Quotas work for users now and groups now.
 
         Remounts /shares to apply quota options 
         Create quota files
@@ -148,6 +149,8 @@ Disk: 10
         Set quote for group-Sales max 5GB
         Set quote for Anna_Legal max 1.2 GB #Not Active
         Set quote for Peter_Sales max 1.2 GB #Not Active
+
+    
 
 # Security
 It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms.
