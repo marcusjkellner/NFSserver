@@ -5,16 +5,25 @@
 
   tasks:
 
+    # Create partition on second disk — skips if /dev/sdb1 already exists
     - name: Create partition on second disk
       ansible.builtin.command: parted /dev/sdb --script mklabel gpt mkpart primary ext4 0% 100%
       args:
         creates: /dev/sdb1
 
+    # Check if partition is already formatted
+    - name: Check if partition is already formatted
+      ansible.builtin.command: blkid /dev/sdb1
+      register: blkid_result
+      changed_when: false
+    
+
+    # Format only if not already formatted
     - name: Format partition as ext4
       ansible.builtin.command: mkfs.ext4 /dev/sdb1
-      args:
-        creates: /dev/sdb1
+      when: '"TYPE" not in blkid_result.stdout'
 
+    # Create /shares mount point
     - name: Create /shares directory
       ansible.builtin.file:
         path: /shares
@@ -23,6 +32,7 @@
         group: root
         mode: '0755'
 
+    # Mount /shares with quota support and add to fstab automatically
     - name: Mount /shares with quota support
       ansible.builtin.mount:
         path: /shares
