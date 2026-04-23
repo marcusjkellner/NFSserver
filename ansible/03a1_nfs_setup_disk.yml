@@ -1,0 +1,39 @@
+---
+- name: Setup /shares 03a_nfs_setup_disk
+  hosts: fileserver
+  become: true
+
+  tasks:
+
+    - name: Create partition on second disk
+      community.general.parted:
+        device: /dev/sdb
+        number: 1
+        state: present
+        fs_type: ext4
+
+    - name: Format partition
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/sdb1
+        opts: "-L shares"
+
+    - name: Create /shares directory
+      ansible.builtin.file:
+        path: /shares
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Mount /shares with quota support
+      ansible.builtin.mount:
+        path: /shares
+        src: /dev/sdb1
+        fstype: ext4
+        opts: defaults,usrquota,grpquota
+        state: mounted
+
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== /shares disk is mounted! ==="
