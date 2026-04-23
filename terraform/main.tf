@@ -51,9 +51,11 @@ resource "proxmox_virtual_environment_vm" "controller" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y ansible",
+      "ansible-galaxy collection install community.general:==2.5.9 --force",
+      "sudo rm -rf /usr/lib/python3/dist-packages/ansible_collections/community/general",
       # Generate SSH key pair on controller
       "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'controller-key'",
-      "echo '=== Controller ready ==='"
+      "echo '=== Controller ready, Ansible installed, packet manager Galaxy community.generl installed ==='"
     ]
   }
 }
