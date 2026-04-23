@@ -5,19 +5,25 @@
 
   tasks:
 
+    # Create partition on second disk using new community.general.parted syntax
     - name: Create partition on second disk
       community.general.parted:
         device: /dev/sdb
         number: 1
         state: present
+        part_type: primary
         fs_type: ext4
+        part_start: "0%"
+        part_end: "100%"
 
-    - name: Format partition
+    # Format partition — only if not already formatted
+    - name: Format partition as ext4
       community.general.filesystem:
         fstype: ext4
         dev: /dev/sdb1
-        opts: "-L shares"
+        force: false
 
+    # Create /shares mount point
     - name: Create /shares directory
       ansible.builtin.file:
         path: /shares
@@ -26,6 +32,7 @@
         group: root
         mode: '0755'
 
+    # Mount /shares with quota support and add to fstab
     - name: Mount /shares with quota support
       ansible.builtin.mount:
         path: /shares
