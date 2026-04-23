@@ -2,17 +2,29 @@
 - name: Configure Quotas on Fileserver
   hosts: fileserver
   become: true
-  
-  
+
   tasks:
+
+    # Remount /shares to ensure quota options are active
     - name: Remount /shares to apply quota options
       ansible.builtin.command: mount -o remount /shares
       changed_when: false
 
+    # Initial quotacheck to create quota database
     - name: Run quotacheck on all filesystems
       ansible.builtin.command: quotacheck -avugm
       changed_when: false
-   
+
+    # Fix quota file permissions so users can check their own quota
+    - name: Fix quota file permissions
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0644'
+      loop:
+        - /shares/aquota.user
+        - /shares/aquota.group
+
+    # Set group quotas
     - name: Set quota for group-Legal
       ansible.builtin.command: setquota -g group-Legal 4800000 5000000 0 0 /shares
       changed_when: false
@@ -21,6 +33,7 @@
       ansible.builtin.command: setquota -g group-Sales 4800000 5000000 0 0 /shares
       changed_when: false
 
+    # Set user quotas
     - name: Set quota for Anna_Legal
       ansible.builtin.command: setquota -u Anna_Legal 1000000 1200000 0 0 /shares
       changed_when: false
@@ -29,6 +42,12 @@
       ansible.builtin.command: setquota -u Peter_Sales 1000000 1200000 0 0 /shares
       changed_when: false
 
+    # Sync quota usage to show real usage
+    - name: Sync quota usage
+      ansible.builtin.command: quotacheck -avugm
+      changed_when: false
+
+    # Show full quota report
     - name: Show quota report
       ansible.builtin.command: repquota -avs
       register: quota_report
@@ -37,8 +56,8 @@
     - name: Print quota report
       ansible.builtin.debug:
         msg: "{{ quota_report.stdout }}"
-    
+
     - name: Show done message
       ansible.builtin.debug:
-        msg: "=== Quotas are set!!! =="
+        msg: "=== Quotas are set! ==="
 
