@@ -19,7 +19,7 @@
         state: directory
         owner: root
         group: group-Legal
-        mode: '0770'
+        mode: '2770'
 
 
     - name: Create /shares/Sales
@@ -28,7 +28,7 @@
         state: directory
         owner: root
         group: group-Sales
-        mode: '0770'
+        mode: '2770'
         
  
     - name: Show done message
