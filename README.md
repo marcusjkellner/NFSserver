@@ -46,6 +46,9 @@ ansible controller: start site.yml, which will play all our playbook files:
     - 07_client_shares
     - 08_nfs_quotas
 
+    The last manual step is to run verify.yml, which is an ansible playbook described in more detail below.
+
+
 ### VM:fileserver
 RAM: 2048 MB
 Cores: 2
@@ -150,9 +153,34 @@ Disk: 10
         Set quote for Anna_Legal max 1.2 GB #Not Active
         Set quote for Peter_Sales max 1.2 GB #Not Active
 
-    
+verify.yml
+    This playbook contains 3 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab functionality. In short:
+    - Anna creates files in /Common and /Legal
+    - Peter views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
+    - Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
 
 # Security
+
+## NFS Protocol
+In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is LInux-exclusive. However, the protocol not very secure on its own:
+- There is no encryption for data at rest or data in transit.
+- It is possible for anyone with physical access to sniff the trafic in plaintext or even tamper with it.
+- There is no strong authentication, NFS relies on GID and UID which can be spoofed
+- If the system is exposed to the internet and/or untrusted users locally NFS needs to be combined with other means of encryption, segmentation and authentication to be considered secure. 
+
+## Samba Protocol
+SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory,but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
+
+## When to use NFS over Samba
+If all devices run Linux and are isolated from other networks and the internet it provides fast file transefer and feels simillar to using your own local storage. 
+
+How to improve NFS security:
+- Encrypt data in transit using a VPN or simillar service like Kerberos
+- Segment the devices using NFS onto their own network
+- Encrypt the data at rest with separate encryption method, like LUKS
+Note: Every measure that fascilitates ecryption will come with a hit to perfromance and convenience, either through distribution of encryption keys or passwords.
+
+## Other notes on Security for our particular lab
 It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms.
 
 We have added terraform.vars to .gitignore, it includes information about:
@@ -165,4 +193,4 @@ While we never upload this information to github it would be better to use hashi
 
 Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.
 
-We also note that currently there is no authentication for users Anna_Legal and Peter_Sales, we could add it to separate secrets later on.
+We also note that currently there is no strong authentication for users Anna_Legal and Peter_Sales, we could add it to separate secrets later on.
