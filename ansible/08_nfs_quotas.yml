@@ -33,13 +33,13 @@
       ansible.builtin.command: setquota -g group-Sales 4800000 5000000 0 0 /shares
       changed_when: false
 
-    # Set user quotas
+    # Set user quotas in their group
     - name: Set quota for Anna_Legal
-      ansible.builtin.command: setquota -u Anna_Legal 1000000 1200000 0 0 /shares
+      ansible.builtin.command: setquota -g Anna_Legal 1000000 1200000 0 0 /shares
       changed_when: false
 
     - name: Set quota for Peter_Sales
-      ansible.builtin.command: setquota -u Peter_Sales 1000000 1200000 0 0 /shares
+      ansible.builtin.command: setquota -g Peter_Sales 1000000 1200000 0 0 /shares
       changed_when: false
 
     # Sync quota usage to show real usage
