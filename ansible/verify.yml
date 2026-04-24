@@ -65,20 +65,11 @@
       ansible.builtin.command: quotacheck -avugm
       changed_when: false
 
-#####
-    - name: Get user quota report
-      ansible.builtin.command: repquota -avs
-      register: user_quota
-      changed_when: false
-
+#Get and print group and user-group quotas
     - name: Get group quota report
       ansible.builtin.command: repquota -avgs
       register: group_quota
       changed_when: false
-
-    - name: Print user quota report
-      ansible.builtin.debug:
-        msg: "{{ user_quota.stdout_lines }}"
 
     - name: Print group quota report
       ansible.builtin.debug:
