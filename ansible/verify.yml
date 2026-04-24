@@ -76,9 +76,13 @@
       register: group_quota
       changed_when: false
 
-    - name: Print quota report
+    - name: Print user quota report
       ansible.builtin.debug:
-        msg: "{{ quota_report.stdout_lines }}"
+        msg: "{{ user_quota.stdout_lines }}"
+
+    - name: Print group quota report
+      ansible.builtin.debug:
+        msg: "{{ group_quota.stdout_lines }}"
 
     - name: Cleanup test files
       ansible.builtin.file:
