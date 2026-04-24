@@ -40,7 +40,8 @@
       ansible.builtin.command: dd if=/dev/zero of=/mnt/Legal/peter_legal.txt bs=1M count=3
       become_user: Peter_Sales
       register: peter_legal
-      ignore_errors: yes
+      failed_when: peter_legal.rc == 0
+      changed_when: false
 
     - name: Print Legal access result
       ansible.builtin.debug:
@@ -64,15 +65,37 @@
       ansible.builtin.command: quotacheck -avugm
       changed_when: false
 
-    - name: Get quota report
+#####
+    - name: Get user quota report
       ansible.builtin.command: repquota -avs
-      register: quota_report
+      register: user_quota
       changed_when: false
 
-    - name: Print quota report
-      ansible.builtin.debug:
-        msg: "{{ quota_report.stdout }}"
+    - name: Get group quota report
+      ansible.builtin.command: repquota -avgs
+      register: group_quota
+      changed_when: false
 
+    - name: Print quota table
+      ansible.builtin.debug:
+        msg: |
+      ╔══════════════════════════════════════════════════════════════╗
+      ║                    QUOTA REPORT                              ║
+      ╠══════════════════════════════════════════════════════════════╣
+      ║ USER QUOTAS                                                  ║
+      ╠═══════════════╦══════════╦══════════╦══════════╦════════════╣
+      ║ User          ║ Used     ║ Soft     ║ Hard     ║ Files      ║
+      ╠═══════════════╬══════════╬══════════╬══════════╬════════════╣
+      ║ Anna_Legal    ║ {{ user_quota.stdout | regex_search('Anna_Legal\\s+--\\s+(\\S+)', '\\1') | first | default('0K') | center(8) }} ║ 977M     ║ 1172M    ║            ║
+      ║ Peter_Sales   ║ {{ user_quota.stdout | regex_search('Peter_Sales\\s+--\\s+(\\S+)', '\\1') | first | default('0K') | center(8) }} ║ 977M     ║ 1172M    ║            ║
+      ╠═══════════════╬══════════╬══════════╬══════════╬════════════╣
+      ║ GROUP QUOTAS                                                 ║
+      ╠═══════════════╬══════════╬══════════╬══════════╬════════════╣
+      ║ group-Legal   ║ {{ group_quota.stdout | regex_search('group-Legal\\s+--\\s+(\\S+)', '\\1') | first | default('0K') | center(8) }} ║ 4800M    ║ 5000M    ║            ║
+      ║ group-Sales   ║ {{ group_quota.stdout | regex_search('group-Sales\\s+--\\s+(\\S+)', '\\1') | first | default('0K') | center(8) }} ║ 4800M    ║ 5000M    ║            ║
+      ╚═══════════════╩══════════╩══════════╩══════════╩════════════╝
+  
+#####
     - name: Cleanup test files
       ansible.builtin.file:
         path: "{{ item }}"
@@ -86,4 +109,7 @@
     - name: Print final message
       ansible.builtin.debug:
         msg: "=== Verification complete ==="
+
+
+  
         
