@@ -5,9 +5,9 @@ Date: 2026-04-28
 Branch: 05-readme
 Description of project
 
-[Comment test 1]: #
+//*Comment test 1*
 
-<!--Comment test 2 -->
+//Comment test 2
 
 # System Requirements
 Proxmox VE hypervisor, tested with version 9.1.1
@@ -23,32 +23,31 @@ Software on Workstation:
     Git, tested with git 2.53.0
 
 # Getting Started 
-1. Clone repository from Github
+## 1. Clone repository from Github
 git clone [git@github.com:dittanvandarnamn/ansible-lab.git](https://github.com/marcusjkellner/NFSserver.git)
 cd NFSserver
 
-2. Skapa secrets-filen (se avsnittet Secrets nedan)
+## 2. Skapa secrets-filen (se avsnittet Secrets nedan)
 cp /terraform/template.tfvars /terraform/terraform.tfvars
 edit terraform.tfvars with your own environment variables and keys
 
-3. Starta alla VMs
+## 3. Starta alla VMs
 cd terraform
 terraform init
 terraform validate #controls the terraform syntax
 terraform plan #checks the terraform project for problems before running
 terraform apply #
 
-4. SSH in på kontrollnoden (om du har en) eller kör Ansible direkt
+## 4. SSH in på kontrollnoden (om du har en) eller kör Ansible direkt
 vagrant ssh control
 
-5. Kör playbooken
+## 5. Kör playbooken
 cd ~/ansible-lab/ansible
 git pull
 ansible-playbook site.yml -v
 
-6. Verifiera att allt fungerar
+## 6. Verifiera att allt fungerar
 bash test/verify.sh
-```
 
 # Architecture
 ![Description](./topology_02-nfsclients.jpg)
