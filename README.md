@@ -10,11 +10,12 @@ Description of project
 //Comment test 2
 
 # System Requirements
-Proxmox VE hypervisor, tested with version 9.1.1
-Hardware on hypervisor:
+Proxmox VE hypervisor tested with version 9.1.1
+Hardware on hypervisor: 
     RAM: 10 GB
     Disk: 60 GB
-Cloud-Init template:
+
+Cloud-Init template:  
     Tested with Ubuntu 22.04.5 LTS / "jammy"
 
 Workstation, Windows 10/11 or macOS Tahoe 26.4
@@ -67,9 +68,9 @@ Tailscale: In order to access our proxmox host for the on-site presentation, we 
 
 ## Virtual Machines
 ### VM:ansible-controller
-RAM: 4096 MB
-Cores: 2
-Disk: 10
+RAM: 4096 MB <br>
+Cores: 2 <br>
+Disk: 10 <br>
 
 This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created.
 The ansible-controller generates an SSH keypair and injects the public key into Terraform so the following VM's will allow the
