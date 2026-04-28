@@ -1,50 +1,55 @@
 # NFSserver
-authors: Marcus Kellner & Ivo Urbanovics <br>
-Course: Virtualization & Automation <br>
-Date: 2026-04-28 <br>
-Branch: 05-readme <br>
+    authors: Marcus Kellner & Ivo Urbanovics 
+    Course: Virtualization & Automation 
+    Date: 2026-04-28 
+    Branch: 05-readme 
 Description of project
 
 # System Requirements
 Proxmox VE hypervisor <br>
+
     tested with version 9.1.1
 Hardware on hypervisor: <br>
-    RAM: 10 GB
+
+    RAM: 10 GB 
     Disk: 60 GB
 
 Cloud-Init template:  <br>
+
     Tested with Ubuntu 22.04.5 LTS / "jammy"
 
 Workstation<br>
+
     Windows 10/11 or macOS Tahoe 26.4
 
 Software on Workstation: <br>
+
     Terraform, tested with version 1.14.8
-    Git, tested with git 2.53.0
+    Git, tested with git 2.53.0 <br>
 
 # Getting Started 
-## 1. Clone repository from Github <br>
-    git clone [git@github.com:dittanvandarnamn/ansible-lab.git](https://github.com/marcusjkellner/NFSserver.git) 
+## 1. Clone repository from Github
+    git clone https://github.com/marcusjkellner/NFSserver.git
     cd NFSserver 
 
 ## 2. Create the shared secrets/env-variables file from template
-cp /terraform/template.tfvars /terraform/terraform.tfvars <br>
-edit terraform.tfvars with your own environment variables and keys <br>
+    cp /terraform/template.tfvars /terraform/terraform.tfvars 
+    edit terraform.tfvars with your own environment variables and keys
 
 ## 3. Start VMs using Terraform
-cd terraform <br>
-terraform init <br>
-terraform validate //controls the terraform syntax <br>
-terraform plan //checks the terraform project for problems before running <br>
-terraform apply  <br>
+    cd terraform 
+    terraform init 
+    terraform validate //controls the terraform syntax 
+    terraform plan //checks the terraform project for problems before running 
+    terraform apply  
 
 ## 4. SSH into VM: ansible-controller
-ssh controller@<controller_ip> <br>
+    ssh controller@<controller_ip>
 
 ## 5. Git Pull and Run site.yml to start all playbooks
-cd ~/NFSserver/ansible <br>
-git pull <br>
-ansible-playbook -i inventory.ini site.yml <br>
+    cd ~/NFSserver/ansible 
+    git pull
+    ansible-playbook -i inventory.ini site.yml
 
 ## 6. Verify lab functionality (See verify-section for more info)
 ansible-playbook -i inventory.ini verify.yml <br>
@@ -67,9 +72,9 @@ Tailscale: In order to access our proxmox host for the on-site presentation, we 
 
 ## Virtual Machines
 ### VM:ansible-controller
-RAM: 4096 MB <br>
-Cores: 2 <br>
-Disk: 10 <br>
+    RAM: 4096 MB 
+    Cores: 2 
+    Disk: 10 
 
 This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created.
 
@@ -86,23 +91,24 @@ From here, all configuration is done using ansible on the ansible controller.
 Manual steps at the point of writing: <br>
 ansible controller: switch to development branch: 02-nfsclient <br>
 ansible controller: start site.yml, which will play all our playbook files: <br>
-    - 01_nfs_install <br>
-    - 02_nfs_users <br>
-    - 03a_nfs_setup_disk <br>
-    - 03b_nfs_shares <br>
-    - 04_nfs_exports <br>
-    - 05_client_install <br>
-    - 06_client_mount <br>
-    - 07_client_shares <br>
-    - 08_nfs_quotas <br>
+
+    - 01_nfs_install
+    - 02_nfs_users 
+    - 03a_nfs_setup_disk 
+    - 03b_nfs_shares 
+    - 04_nfs_exports 
+    - 05_client_install 
+    - 06_client_mount 
+    - 07_client_shares 
+    - 08_nfs_quotas 
 
 The last manual step is to run verify.yml, which is an ansible playbook described in more detail below.
 
 
 ### VM:fileserver
-RAM: 2048 MB <br>
-Cores: 2 <br>
-Disk: 20 GB (10 GB OS + 10 GB Filestoreage /shares) <br>
+    RAM: 2048 MB 
+    Cores: 2 
+    Disk: 20 GB (10 GB OS + 10 GB Filestoreage /shares) 
 
 After creation, we format a separate partition for filestorage as /shares with support for quotas using Ansible. Ansible is used to install NFS, create users and groups, create the directories the users will share and start the NFS service.
 
@@ -167,8 +173,9 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
 03a_nfs_setup_disk <br>
     Creates a new partition and formats it for use with the quote-system. 
     Creates the /shares directory on the new partition and mounts /shares for file storage.
-    There are checks that measures if the disk is present and have been formatted at least once in order to preserve ideompotency.
-        /shares
+    There are checks that measures if the disk is present and have been formatted at least once in order to preserve ideompotency.<br>
+    
+        /shares 
             mode: 0755
                 Root can read, write, enter
                 Legal and Sales can read, enter, not write
@@ -176,6 +183,7 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
     /etc/fstab is configured for automount on reboot.
 
 03b_nfs_shares <br>
+
     Creates three directory types: 
 
         /shares/Common 
@@ -195,19 +203,23 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
                 Others blocked
 
 04_nfs_exports <br>
+
     Configures a permanent directory 'exports' that tells the NFS server the direcories to share and who can acess them, it also reloads the changed configuration and starts the the NFS server service.
 
 05_client_install <br>
+
     Installs the NFS-client package on all clients
 
 06_client_mount <br>
+
     Creates mounting points on all clients
     /mnt/Common
     /mnt/Legal
     /mnt/Sales
 
 07_client_shares <br>
-    Mounts mnt/shares to reference the directories on the fileserver
+
+    Mounts mnt/shares to reference the directories on the fileserver 
         /mnt/Common > fileserver /shares/Common
         /mnt/Legal > fileserver /shares/Legal
         /mnt/Sales > fileserver /shares/Sales
