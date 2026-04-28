@@ -1,10 +1,62 @@
 # NFSserver
-authors: Marcus & Ivo
-Branch: 02-nfsclients
+authors: Marcus Kellner & Ivo Urbanovics
+Course: Virtualization & Automation
+Date: 2026-04-28
+Branch: 05-readme
+Description of project
 
-# Infrastructure
+[Comment test 1]: #
+
+<!--Comment test 2 -->
+
+# System Requirements
+Proxmox VE hypervisor, tested with version 9.1.1
+Hardware on hypervisor:
+    RAM: 10 GB
+    Disk: 60 GB
+Cloud-Init template:
+    Tested with Ubuntu 22.04.5 LTS / "jammy"
+
+Workstation, Windows 10/11 or macOS Tahoe 26.4
+Software on Workstation: 
+    Terraform, tested with version 1.14.8
+    Git, tested with git 2.53.0
+
+# Getting Started 
+1. Clone repository from Github
+git clone [git@github.com:dittanvandarnamn/ansible-lab.git](https://github.com/marcusjkellner/NFSserver.git)
+cd NFSserver
+
+2. Skapa secrets-filen (se avsnittet Secrets nedan)
+cp /terraform/template.tfvars /terraform/terraform.tfvars
+edit terraform.tfvars with your own environment variables and keys
+
+3. Starta alla VMs
+cd terraform
+terraform init
+terraform validate #controls the terraform syntax
+terraform plan #checks the terraform project for problems before running
+terraform apply #
+
+4. SSH in på kontrollnoden (om du har en) eller kör Ansible direkt
+vagrant ssh control
+
+5. Kör playbooken
+cd ~/ansible-lab/ansible
+git pull
+ansible-playbook site.yml -v
+
+6. Verifiera att allt fungerar
+bash test/verify.sh
+```
+
+# Architecture
 ![Description](./topology_02-nfsclients.jpg)
-## Proxmox
+
+## Workstation (Mac or Windows)
+We use Terraform from our respective workstations to create our infrastructure.
+
+## Hypervisor (Proxmox, type 1)
 To create and host our infrastructure we use Proxmox in our repective homelab environments.
 This means that we need to expose IP-addresses to variables in order to adapt our code for both setups. 
 
@@ -14,9 +66,7 @@ In order to use terraform we both needed to create separate terraform API-keys. 
 
 Tailscale: In order to access our proxmox host for the on-site presentation, we will connect to one of our homelabs using Tailscale.
 
-## Terraform
-We use Terraform from our respective workstations to create our infrastructure. These are the VMs we create:
-
+## Virtual Machines
 ### VM:ansible-controller
 RAM: 4096 MB
 Cores: 2
@@ -81,6 +131,27 @@ Currently users Anna_Legal and Peter_Sales are created on both clients and the f
 RAM: 2048 MB
 Cores: 2
 Disk: 10
+
+# Folder Structure
+![Description](./folder_structure.jpg)
+
+# Environment variables, IPs and secrets
+See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this.
+    os_type = "windows" OS-type, can be set to "windows" or "mac"
+
+    api_token      = "" You need to create an API token in proxmox for terraform use and enter it here
+    ssh_public_key = "" Enter a public ssh key for your workstation host
+
+    endpoint    = "https://192.168.1.200:8006" IP for proxmox endpoint
+    nodename    = "pve" local proxmox nodename
+    VMTemplateID    = 1100 The VM-template ID of the cloud-init you want to use for the base of all VM's. WE recommend using Ubuntu 24.4.04 "Jammy"
+
+    vm_gateway  = "192.168.1.1" #Enter the IP of your default gateway (likely your ISP router) 
+
+    controller_ip   = "192.168.1.41/24" IP of the ansible control node
+    fileserver_ip   = "192.168.1.42/24" IP of the NFS fileserver
+    clientLegal_ip  = "192.168.1.43/24" IP of the Legal client VM
+    clientSales_ip  = "192.168.1.44/24" IP of the Sales client VM
 
 # Ansible playbooks
 01_nfs_install
@@ -159,7 +230,11 @@ verify.yml
     - Peter views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
     - Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
 
-# Security
+# Verification
+
+# Security Measures
+
+# Security analysis
 
 ## NFS Protocol
 In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is LInux-exclusive. However, the protocol not very secure on its own:
@@ -194,3 +269,5 @@ While we never upload this information to github it would be better to use hashi
 Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.
 
 We also note that currently there is no strong authentication for users Anna_Legal and Peter_Sales, we could add it to separate secrets later on.
+
+# Design Choices and rationale
