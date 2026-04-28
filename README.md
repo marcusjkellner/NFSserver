@@ -238,12 +238,30 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
         Set quote for Peter_Sales max 1.2 GB #Not Active
 
 verify.yml <br>
-    This playbook contains 3 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab functionality. In short:
-    - Anna creates files in /Common and /Legal
-    - Peter views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
-    - Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
+
+    This playbook runs a test to verify lab's functionality, for details look on the section below.
+    
 
 # Verification
+The verification playbook contains 3 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality. In short:
+    - Anna (a user from the Legal group) creates files in /Common and /Legal
+    - Peter (a user from the Sales group) views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
+    - Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
+
+To add: traffic control!!! And a ping between VLANs (if we manage)
+
+# Expected output
+Anna can creates files in /Common
+Anna can creates files in /Legal
+Anna is permission denied in /Sales
+
+Peter can creates files in /Common
+Peter can creates files in /Sales
+Peter is permission denied in /Legal
+
+Quota report printed per user group and per user
+
+
 
 # Security Measures
 
