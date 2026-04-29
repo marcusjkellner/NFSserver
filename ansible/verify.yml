@@ -7,70 +7,46 @@
   tasks:
     - name: Anna creates 1MB file in /mnt/Common
       ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Common/anna_common.txt bs=1M count=1
-     
+      register: anna_common
+      ignore_errors: yes
 
     - name: Anna creates 1MB file in /mnt/Legal
       ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Legal/anna_legal.txt bs=1M count=1
-  
+      register: anna_legal
+      ignore_errors: yes
 
-    - name: Show done
-      ansible.builtin.debug:
-        msg: "=== Anna created her files ==="
+    - name: Anna tries to write to /mnt/Sales
+      ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Sales/anna_sales.txt bs=1M count=1
+      register: anna_sales
+      ignore_errors: yes
 
-# ── STEP 2: Peter sees Annas file and tests access ───────────────────────────
-- name: Step 2 - Peter tests access from clientSales
+# ── STEP 2: Peter tests access from clientSales ──────────────────────────────
+- name: Step 2 - Peter tests access
   hosts: clients[1]
   become: true
 
   tasks:
-    - name: Peter reads Annas file in /mnt/Common
-      ansible.builtin.command: sudo -u Peter_Sales ls -lh /mnt/Common/anna_common.txt
-      register: peter_sees_anna
-
-    - name: Print result
-      ansible.builtin.debug:
-        msg: "Peter sees Annas file: {{ peter_sees_anna.stdout }}"
-
     - name: Peter creates 2MB file in /mnt/Common
       ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Common/peter_common.txt bs=1M count=2
+      register: peter_common
+      ignore_errors: yes
+
+    - name: Peter creates 2MB file in /mnt/Sales
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Sales/peter_sales.txt bs=1M count=2
+      register: peter_sales
+      ignore_errors: yes
 
     - name: Peter tries to write to /mnt/Legal
       ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Legal/peter_legal.txt bs=1M count=3
       register: peter_legal
-      failed_when: peter_legal.rc == 0
-      changed_when: false
+      ignore_errors: yes
 
-    - name: Print Legal access result
-      ansible.builtin.debug:
-        msg: "Peter denied writing to /mnt/Legal: {{ 'PASS' if peter_legal.rc != 0 else 'FAIL ❌' }}"
-
-    - name: Peter creates 2MB file in /mnt/Sales
-      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Sales/peter_sales.txt bs=1M count=2
-
-    - name: Show done
-      ansible.builtin.debug:
-        msg: "=== Peter done ==="
-
-# ── STEP 3: Quota report ─────────────────────────────────────────────────────
-- name: Step 3 - Quota report
+# ── STEP 3: Cleanup, summary and quota report ────────────────────────────────
+- name: Step 3 - Cleanup, summary and quota report
   hosts: fileserver
   become: true
 
   tasks:
-    - name: Sync quota usage
-      ansible.builtin.command: quotacheck -avugm
-      changed_when: false
-
-#Get and print group and user-group quotas
-    - name: Get group quota report
-      ansible.builtin.command: repquota -avgs
-      register: group_quota
-      changed_when: false
-
-    - name: Print group quota report
-      ansible.builtin.debug:
-        msg: "{{ group_quota.stdout_lines }}"
-
     - name: Cleanup test files
       ansible.builtin.file:
         path: "{{ item }}"
@@ -81,10 +57,43 @@
         - /shares/Common/peter_common.txt
         - /shares/Sales/peter_sales.txt
 
-    - name: Print final message
+    - name: Sync quota usage
+      ansible.builtin.command: quotacheck -avugm
+      changed_when: false
+
+    - name: Get user quota report
+      ansible.builtin.command: repquota -avs
+      register: user_quota
+      changed_when: false
+
+    - name: Get group quota report
+      ansible.builtin.command: repquota -avgs
+      register: group_quota
+      changed_when: false
+
+    - name: Print user quota report
       ansible.builtin.debug:
-        msg: "=== Verification complete ==="
+        msg: "{{ user_quota.stdout_lines }}"
 
+    - name: Print group quota report
+      ansible.builtin.debug:
+        msg: "{{ group_quota.stdout_lines }}"
 
-  
-        
+    - name: Print final summary
+      ansible.builtin.debug:
+        msg:
+          - "======================================="
+          - "===    VERIFICATION SUMMARY         ==="
+          - "======================================="
+          - "ANNA_LEGAL (from clientLegal):"
+          - "  /mnt/Common → CAN write    : {{ 'PASS ✅' if hostvars[groups['clients'][0]]['anna_common']['rc'] == 0 else 'FAIL ❌' }}"
+          - "  /mnt/Legal  → CAN write    : {{ 'PASS ✅' if hostvars[groups['clients'][0]]['anna_legal']['rc'] == 0 else 'FAIL ❌' }}"
+          - "  /mnt/Sales  → ACCESS DENIED: {{ 'PASS ✅' if hostvars[groups['clients'][0]]['anna_sales']['rc'] != 0 else 'FAIL ❌' }}"
+          - "---------------------------------------"
+          - "PETER_SALES (from clientSales):"
+          - "  /mnt/Common → CAN write    : {{ 'PASS ✅' if hostvars[groups['clients'][1]]['peter_common']['rc'] == 0 else 'FAIL ❌' }}"
+          - "  /mnt/Sales  → CAN write    : {{ 'PASS ✅' if hostvars[groups['clients'][1]]['peter_sales']['rc'] == 0 else 'FAIL ❌' }}"
+          - "  /mnt/Legal  → ACCESS DENIED: {{ 'PASS ✅' if hostvars[groups['clients'][1]]['peter_legal']['rc'] != 0 else 'FAIL ❌' }}"
+          - "======================================="
+          - "===    Verification complete!       ==="
+          - "======================================="

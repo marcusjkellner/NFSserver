@@ -1,0 +1,90 @@
+---
+# ── STEP 1: Anna creates files from clientLegal ──────────────────────────────
+- name: Step 1 - Anna creates files
+  hosts: clients[0]
+  become: true
+
+  tasks:
+    - name: Anna creates 1MB file in /mnt/Common
+      ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Common/anna_common.txt bs=1M count=1
+     
+
+    - name: Anna creates 1MB file in /mnt/Legal
+      ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Legal/anna_legal.txt bs=1M count=1
+  
+
+    - name: Show done
+      ansible.builtin.debug:
+        msg: "=== Anna created her files ==="
+
+# ── STEP 2: Peter sees Annas file and tests access ───────────────────────────
+- name: Step 2 - Peter tests access from clientSales
+  hosts: clients[1]
+  become: true
+
+  tasks:
+    - name: Peter reads Annas file in /mnt/Common
+      ansible.builtin.command: sudo -u Peter_Sales ls -lh /mnt/Common/anna_common.txt
+      register: peter_sees_anna
+
+    - name: Print result
+      ansible.builtin.debug:
+        msg: "Peter sees Annas file: {{ peter_sees_anna.stdout }}"
+
+    - name: Peter creates 2MB file in /mnt/Common
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Common/peter_common.txt bs=1M count=2
+
+    - name: Peter tries to write to /mnt/Legal
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Legal/peter_legal.txt bs=1M count=3
+      register: peter_legal
+      failed_when: peter_legal.rc == 0
+      changed_when: false
+
+    - name: Print Legal access result
+      ansible.builtin.debug:
+        msg: "Peter denied writing to /mnt/Legal: {{ 'PASS' if peter_legal.rc != 0 else 'FAIL ❌' }}"
+
+    - name: Peter creates 2MB file in /mnt/Sales
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Sales/peter_sales.txt bs=1M count=2
+
+    - name: Show done
+      ansible.builtin.debug:
+        msg: "=== Peter done ==="
+
+# ── STEP 3: Quota report ─────────────────────────────────────────────────────
+- name: Step 3 - Quota report
+  hosts: fileserver
+  become: true
+
+  tasks:
+    - name: Sync quota usage
+      ansible.builtin.command: quotacheck -avugm
+      changed_when: false
+
+#Get and print group and user-group quotas
+    - name: Get group quota report
+      ansible.builtin.command: repquota -avgs
+      register: group_quota
+      changed_when: false
+
+    - name: Print group quota report
+      ansible.builtin.debug:
+        msg: "{{ group_quota.stdout_lines }}"
+
+    - name: Cleanup test files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /shares/Common/anna_common.txt
+        - /shares/Legal/anna_legal.txt
+        - /shares/Common/peter_common.txt
+        - /shares/Sales/peter_sales.txt
+
+    - name: Print final message
+      ansible.builtin.debug:
+        msg: "=== Verification complete ==="
+
+
+  
+        

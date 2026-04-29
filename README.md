@@ -259,6 +259,10 @@ Peter can creates files in /Common
 Peter can creates files in /Sales
 Peter is permission denied in /Legal
 
+Erase all the created test files in this section
+
+Printed summary of all the tests in one place 
+
 Quota report printed per user group and per user
 
 
