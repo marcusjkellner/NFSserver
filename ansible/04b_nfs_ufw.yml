@@ -1,0 +1,45 @@
+---
+- name: Configure UFW on Fileserver
+  hosts: fileserver
+  become: true
+
+  tasks:
+
+    - name: Install UFW
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+
+    - name: Set default deny incoming
+      community.general.ufw:
+        default: deny
+        direction: incoming
+
+    - name: Allow SSH from controller
+      community.general.ufw:
+        rule: allow
+        from_ip: "{{ hostvars[groups['clients'][0]]['ansible_host'] }}"
+        port: '22'
+        proto: tcp
+
+    - name: Allow NFS from clientLegal
+      community.general.ufw:
+        rule: allow
+        from_ip: "{{ groups['clients'][0] }}"
+        port: '2049'
+        proto: tcp
+
+    - name: Allow NFS from clientSales
+      community.general.ufw:
+        rule: allow
+        from_ip: "{{ groups['clients'][1] }}"
+        port: '2049'
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== UFW configured on fileserver ==="
