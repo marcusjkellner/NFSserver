@@ -199,7 +199,7 @@ resource "null_resource" "run_ansible" {
   provisioner "remote-exec" {
     inline = [
       "git clone https://github.com/marcusjkellner/NFSserver.git ~/NFSserver",
-      "printf ''[controller]\\n${split("/", var.controller_ip)[0]} ansible_user=${var.controller_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n\\n[fileserver]\\n${split("/", var.fileserver_ip)[0]} ansible_user=${var.fileserver_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n\\n[clients]\\n${split("/", var.clientLegal_ip)[0]} ansible_user=${var.clientLegal_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n${split("/", var.clientSales_ip)[0]} ansible_user=${var.clientSales_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n' > ~/NFSserver/ansible/inventory.ini",
+      "printf '[controller]\\n${split("/", var.controller_ip)[0]} ansible_user=${var.controller_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n\\n[fileserver]\\n${split("/", var.fileserver_ip)[0]} ansible_user=${var.fileserver_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n\\n[clients]\\n${split("/", var.clientLegal_ip)[0]} ansible_user=${var.clientLegal_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n${split("/", var.clientSales_ip)[0]} ansible_user=${var.clientSales_username} ansible_ssh_private_key_file=~/.ssh/id_ed25519\\n' > ~/NFSserver/ansible/inventory.ini",
       "echo '=== Repo cloned and inventory ready ==='"
     ]
   }
