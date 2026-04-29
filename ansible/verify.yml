@@ -6,12 +6,12 @@
 
   tasks:
     - name: Anna creates 1MB file in /mnt/Common
-      ansible.builtin.command: dd if=/dev/zero of=/mnt/Common/anna_common.txt bs=1M count=1
-      become_user: Anna_Legal
+      ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Common/anna_common.txt bs=1M count=1
+     
 
     - name: Anna creates 1MB file in /mnt/Legal
-      ansible.builtin.command: dd if=/dev/zero of=/mnt/Legal/anna_legal.txt bs=1M count=1
-      become_user: Anna_Legal
+      ansible.builtin.command: sudo -u Anna_Legal dd if=/dev/zero of=/mnt/Legal/anna_legal.txt bs=1M count=1
+  
 
     - name: Show done
       ansible.builtin.debug:
@@ -24,8 +24,7 @@
 
   tasks:
     - name: Peter reads Annas file in /mnt/Common
-      ansible.builtin.command: ls -lh /mnt/Common/anna_common.txt
-      become_user: Peter_Sales
+      ansible.builtin.command: sudo -u Peter_Sales ls -lh /mnt/Common/anna_common.txt
       register: peter_sees_anna
 
     - name: Print result
@@ -33,12 +32,10 @@
         msg: "Peter sees Annas file: {{ peter_sees_anna.stdout }}"
 
     - name: Peter creates 2MB file in /mnt/Common
-      ansible.builtin.command: dd if=/dev/zero of=/mnt/Common/peter_common.txt bs=1M count=2
-      become_user: Peter_Sales
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Common/peter_common.txt bs=1M count=2
 
     - name: Peter tries to write to /mnt/Legal
-      ansible.builtin.command: dd if=/dev/zero of=/mnt/Legal/peter_legal.txt bs=1M count=3
-      become_user: Peter_Sales
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Legal/peter_legal.txt bs=1M count=3
       register: peter_legal
       failed_when: peter_legal.rc == 0
       changed_when: false
@@ -48,8 +45,7 @@
         msg: "Peter denied writing to /mnt/Legal: {{ 'PASS' if peter_legal.rc != 0 else 'FAIL ❌' }}"
 
     - name: Peter creates 2MB file in /mnt/Sales
-      ansible.builtin.command: dd if=/dev/zero of=/mnt/Sales/peter_sales.txt bs=1M count=2
-      become_user: Peter_Sales
+      ansible.builtin.command: sudo -u Peter_Sales dd if=/dev/zero of=/mnt/Sales/peter_sales.txt bs=1M count=2
 
     - name: Show done
       ansible.builtin.debug:
