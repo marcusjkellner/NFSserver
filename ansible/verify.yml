@@ -1,7 +1,7 @@
 ---
 # ── STEP 1: Check UFW rules ──────────────────────────────
 - name: Step 1 - Test UFW firewall rules
-  hosts: controller
+  hosts: localhost
   become: true
 
   tasks:
