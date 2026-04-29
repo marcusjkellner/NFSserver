@@ -1,11 +1,16 @@
-# Project Overview
+# Automated NFS-Fileserver Lab
+## Table of Contents
+- [Project Description](#project-description)
+- [System Requirements](#system-requirements)
+- [Getting Started](#getting-started)
+
+## Project Description
     Project Name: Automated NFS-Fileserver Lab
     Authors: Marcus Kellner & Ivo Urbanovics
     Class: ITS25
     Course: Virtualization & Automation 
     Date: 2026-04-29 
     Branch: 07-UFW 
-## Description
 This is a lab built by Marcus and Ivo during the spring of 2026 as part of a vocational university course called Virtualization and Automation ("Virtualiseringsteknik och Automation" in Swedish). 
 
 The project will instruct a Proxmox server to create several virtual machines using Terraform and configures the VMs with Ansible to install one NFS fileserver and two NFS client VMs. Two groups of users are created, shares are created on the fileserver and mounted automatically on the clients. Permissions and qoutas are assigned per group.
@@ -14,48 +19,53 @@ Our purpose was to learn how to create and document infrastructure as code while
 
 Total time spent is about three working weeks, including time spent learning Git-basics.
 
-# System Requirements
-## Proxmox VE hypervisor
-    Proxmox version 9.1.1
-    Project Hardware requirements:
-        RAM: 10 GB 
-        Disk: 60 GB
+## System Requirements
+### Proxmox VE hypervisor
+    Proxmox version: 9.1.1
+    Project Hardware requirements:  10GB RAM, 60GB Disk
     Cloud-Init template: Ubuntu 22.04.5 LTS / "jammy" 
 
-## Workstation Compute
+### Workstation Computer
     OS: Windows 10/11 or macOS Tahoe 26.4
     Software:
-        Terraform, tested with version 1.14.8
-        Git, tested with git 2.53.0
+        Terraform version: 1.14.8
+        Git version: 2.53.0
 
-# Getting Started 
-## 1. Clone repository from Github
+## Getting Started 
+### 1. Clone repository from Github
     git clone https://github.com/marcusjkellner/NFSserver.git
     cd NFSserver 
+Download the repository to your workstation, see requirements above.
 
-## 2. Create the shared secrets/env-variables file from template
-    cp /terraform/template.tfvars /terraform/terraform.tfvars 
-    edit terraform.tfvars with your own environment variables and keys
+### 2. Create the shared secrets/env-variables file from template
+    cp /terraform/template.tfvars /terraform/terraform.tfvars
+    nano /terraform/terraform.tfvars    
+Copy the template secrets-file and edit terraform.tfvars with your own environment variables and API-keys. Keep this file secret and local.
 
-## 3. Start VMs using Terraform
+### 3. Start VM creation using Terraform
     cd terraform 
     terraform init 
-    terraform validate //controls the terraform syntax 
-    terraform plan //checks the terraform project for problems before running 
+    terraform validate
+    terraform plan
     terraform apply  
+These instructions will initialize Terraform in the terraform-folder, check for syntax problems and the apply command will start the building process once you type "yes" to confirm. Note: The creation process takes about 6 minutes.
 
-## 4. SSH into VM: ansible-controller
-    ssh controller@<controller_ip>
+### 4. SSH into VM: ansible-controller
+    ssh controller@192.168.1.41
+Once complete, it's time to SSH into the ansible controller node.
 
-## 5. Git Pull and Run site.yml to start all playbooks
+IMPORTANT NOTE: The IP 192.168.1.41 is the default-template for controller_ip and must match your environment variables in terraform.tfvars!
+
+### 5. Git Pull and Run site.yml to start all playbooks
     cd ~/NFSserver/ansible 
-    git pull
-    ansible-playbook -i inventory.ini site.yml
+    ansible-playbook site.yml
+The Controller should already have the latest version of this repository downloaded. Move into /ansible and run site.yml. It contains all playbooks necessary for the remaining configuration. 
 
-## 6. Verify lab functionality (See verify-section for more info)
-ansible-playbook -i inventory.ini verify.yml <br>
+### 6. Verify lab functionality (See verify-section for more info)
+    ansible-playbook verify.yml
+Once the playbook is finished you can run a separate playbook called verify.yml which will run a few tests verifying the UFW-configuration, user permissions and disk qouta. For more details see "Verification" below.
 
-# Architecture
+# Project Architecture
 ![Description](./topology_02-nfsclients.jpg)
 
 ## Workstation (Mac or Windows)
