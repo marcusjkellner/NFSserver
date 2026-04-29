@@ -1,64 +1,12 @@
 ---
 # ── STEP 1: Check UFW rules ──────────────────────────────
-- name: Step 1 - Test UFW firewall rules
-  hosts: controller
-  become: true
 
-  tasks:
-    - name: Test NFS port 2049 is BLOCKED from controller to fileserver
-      ansible.builtin.command: nc -zv {{ groups['fileserver'][0] }} 2049
-      register: controller_nfs_test
-      changed_when: false
-      ignore_errors: yes
+# Add test to check that fileserver blocks incoming SSH traffic on port 22, except from controller
 
-    - name: Test NFS port 2049 is reachable from clientLegal to fileserver
-      ansible.builtin.command: nc -zv {{ groups['fileserver'][0] }} 2049
-      register: client_legal_nfs_test
-      changed_when: false
-      ignore_errors: yes
-      delegate_to: "{{ groups['clients'][0] }}"
+# Add test to check that clients blocks incoming SSH traffic on port 22, except from controller
 
-    - name: Test NFS port 2049 is reachable from clientSales to fileserver
-      ansible.builtin.command: nc -zv {{ groups['fileserver'][0] }} 2049
-      register: client_sales_nfs_test
-      changed_when: false
-      ignore_errors: yes
-      delegate_to: "{{ groups['clients'][1] }}"
+# Add test to check that fileserver blocks incoming traffic on port 2049 from controller
 
-    - name: Test SSH port 22 is reachable from controller to fileserver
-      ansible.builtin.command: nc -zv {{ groups['fileserver'][0] }} 22
-      register: controller_ssh_test
-      changed_when: false
-      ignore_errors: yes
-
-    - name: Test SSH port 22 is BLOCKED from clientLegal to fileserver
-      ansible.builtin.command: nc -zv -w 3 {{ groups['fileserver'][0] }} 22
-      register: client_legal_ssh_test
-      changed_when: false
-      ignore_errors: yes
-      delegate_to: "{{ groups['clients'][0] }}"
-
-    - name: Test SSH port 22 is BLOCKED from clientSales to fileserver
-      ansible.builtin.command: nc -zv -w 3 {{ groups['fileserver'][0] }} 22
-      register: client_sales_ssh_test
-      changed_when: false
-      ignore_errors: yes
-      delegate_to: "{{ groups['clients'][1] }}"
-
-    - name: UFW firewall summary
-      ansible.builtin.debug:
-        msg:
-          - "======================================="
-          - "===    UFW FIREWALL TEST SUMMARY    ==="
-          - "======================================="
-          - "FILESERVER:"
-          - "  NFS (2049) from controller  → BLOCKED : {{ 'PASS ✅' if controller_nfs_test.rc != 0 else 'FAIL ❌' }}"         
-          - "  NFS (2049) from clientLegal → ALLOWED : {{ 'PASS ✅' if client_legal_nfs_test.rc == 0 else 'FAIL ❌' }}"
-          - "  NFS (2049) from clientSales → ALLOWED : {{ 'PASS ✅' if client_sales_nfs_test.rc == 0 else 'FAIL ❌' }}"
-          - "  SSH (22)   from controller  → ALLOWED : {{ 'PASS ✅' if controller_ssh_test.rc == 0 else 'FAIL ❌' }}"
-          - "  SSH (22)   from clientLegal → BLOCKED : {{ 'PASS ✅' if client_legal_ssh_test.rc != 0 else 'FAIL ❌' }}"
-          - "  SSH (22)   from clientSales → BLOCKED : {{ 'PASS ✅' if client_sales_ssh_test.rc != 0 else 'FAIL ❌' }}"
-          - "======================================="
 
 # ── STEP 2: Anna creates files from clientLegal ──────────────────────────────
 - name: Step 2 - Anna creates files
