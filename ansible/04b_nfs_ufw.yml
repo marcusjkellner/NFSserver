@@ -25,7 +25,7 @@
     - name: Allow NFS from clientLegal
       community.general.ufw:
         rule: allow
-        from_ip: "{{ groups['clients'][1] }}"
+        from_ip: "{{ groups['clients'][0] }}"
         port: '2049'
         proto: tcp
 
@@ -43,3 +43,35 @@
     - name: Show done message
       ansible.builtin.debug:
         msg: "=== UFW configured on fileserver ==="
+
+- name: Configure UFW on Clients
+  hosts: clients
+  become: true
+
+  tasks:
+
+    - name: Install UFW
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+
+    - name: Set default deny incoming
+      community.general.ufw:
+        default: deny
+        direction: incoming
+
+    - name: Allow SSH from controller
+      community.general.ufw:
+        rule: allow
+        from_ip: "{{ groups['controller'][0] }}"
+        port: '22'
+        proto: tcp
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+
+    - name: Show done message
+      ansible.builtin.debug:
+        msg: "=== UFW configured on Clients ==="
+        
