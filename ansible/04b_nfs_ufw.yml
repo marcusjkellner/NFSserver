@@ -18,7 +18,7 @@
     - name: Allow SSH from controller
       community.general.ufw:
         rule: allow
-        from_ip: "{{ hostvars[groups['clients'][0]]['ansible_host'] }}"
+        from_ip: "{{ groups['controller'][0] }}"
         port: '22'
         proto: tcp
 
