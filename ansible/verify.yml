@@ -45,7 +45,7 @@
 
     - name: Print Legal access result
       ansible.builtin.debug:
-        msg: "Peter denied writing to /mnt/Legal: {{ 'PASS ✅' if peter_legal.rc != 0 else 'FAIL ❌' }}"
+        msg: "Peter denied writing to /mnt/Legal: {{ 'PASS' if peter_legal.rc != 0 else 'FAIL ❌' }}"
 
     - name: Peter creates 2MB file in /mnt/Sales
       ansible.builtin.command: dd if=/dev/zero of=/mnt/Sales/peter_sales.txt bs=1M count=2
