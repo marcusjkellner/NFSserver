@@ -25,7 +25,7 @@
     - name: Allow NFS from clientLegal
       community.general.ufw:
         rule: allow
-        from_ip: "{{ groups['clients'][0] }}"
+        from_ip: "{{ groups['clients'][1] }}"
         port: '2049'
         proto: tcp
 
