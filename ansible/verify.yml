@@ -47,6 +47,21 @@
       ignore_errors: yes
       delegate_to: "{{ groups['clients'][1] }}"
 
+    - name: UFW firewall summary
+      ansible.builtin.debug:
+        msg:
+          - "======================================="
+          - "===    UFW FIREWALL TEST SUMMARY    ==="
+          - "======================================="
+          - "FILESERVER:"
+          - "  NFS (2049) from controller  → BLOCKED : {{ 'PASS ✅' if controller_nfs_test.rc != 0 else 'FAIL ❌' }}"         
+          - "  NFS (2049) from clientLegal → ALLOWED : {{ 'PASS ✅' if client_legal_nfs_test.rc == 0 else 'FAIL ❌' }}"
+          - "  NFS (2049) from clientSales → ALLOWED : {{ 'PASS ✅' if client_sales_nfs_test.rc == 0 else 'FAIL ❌' }}"
+          - "  SSH (22)   from controller  → ALLOWED : {{ 'PASS ✅' if controller_ssh_test.rc == 0 else 'FAIL ❌' }}"
+          - "  SSH (22)   from clientLegal → BLOCKED : {{ 'PASS ✅' if client_legal_ssh_test.rc != 0 else 'FAIL ❌' }}"
+          - "  SSH (22)   from clientSales → BLOCKED : {{ 'PASS ✅' if client_sales_ssh_test.rc != 0 else 'FAIL ❌' }}"
+          - "======================================="
+
 # ── STEP 2: Anna creates files from clientLegal ──────────────────────────────
 - name: Step 2 - Anna creates files
   hosts: clients[0]
@@ -135,19 +150,4 @@
           - "  /mnt/Legal  → ACCESS DENIED: {{ 'PASS ✅' if hostvars[groups['clients'][1]]['peter_legal']['rc'] != 0 else 'FAIL ❌' }}"
           - "======================================="
           - "===    Verification complete!       ==="
-          - "======================================="
-
-    - name: UFW firewall summary
-      ansible.builtin.debug:
-        msg:
-          - "======================================="
-          - "===    UFW FIREWALL TEST SUMMARY    ==="
-          - "======================================="
-          - "FILESERVER:"
-          - "  NFS (2049) from controller  → BLOCKED : {{ 'PASS ✅' if controller_nfs_test.rc != 0 else 'FAIL ❌' }}"         
-          - "  NFS (2049) from clientLegal → ALLOWED : {{ 'PASS ✅' if client_legal_nfs_test.rc == 0 else 'FAIL ❌' }}"
-          - "  NFS (2049) from clientSales → ALLOWED : {{ 'PASS ✅' if client_sales_nfs_test.rc == 0 else 'FAIL ❌' }}"
-          - "  SSH (22)   from controller  → ALLOWED : {{ 'PASS ✅' if controller_ssh_test.rc == 0 else 'FAIL ❌' }}"
-          - "  SSH (22)   from clientLegal → BLOCKED : {{ 'PASS ✅' if client_legal_ssh_test.rc != 0 else 'FAIL ❌' }}"
-          - "  SSH (22)   from clientSales → BLOCKED : {{ 'PASS ✅' if client_sales_ssh_test.rc != 0 else 'FAIL ❌' }}"
           - "======================================="

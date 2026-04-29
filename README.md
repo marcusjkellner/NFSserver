@@ -1,31 +1,32 @@
-# NFSserver
-    authors: Marcus Kellner & Ivo Urbanovics 
+# Project Overview
+    Project Name: Automated NFS-Fileserver Lab
+    Authors: Marcus Kellner & Ivo Urbanovics
+    Class: ITS25
     Course: Virtualization & Automation 
-    Date: 2026-04-28 
-    Branch: 05-readme 
-Description of project
+    Date: 2026-04-29 
+    Branch: 07-UFW 
+## Description
+This is a lab built by Marcus and Ivo during the spring of 2026 as part of a vocational university course called Virtualization and Automation ("Virtualiseringsteknik och Automation" in Swedish). 
+
+The project will instruct a Proxmox server to create several virtual machines using Terraform and configures the VMs with Ansible to install one NFS fileserver and two NFS client VMs. Two groups of users are created, shares are created on the fileserver and mounted automatically on the clients. Permissions and qoutas are assigned per group.
+
+Our purpose was to learn how to create and document infrastructure as code while being able to manage it effectively by keeping idempotency preserved. The project also served as an introduction to working with GIT using the terminal and we have chosen to preserve our development branches to document our progress.
+
+Total time spent is about three working weeks, including time spent learning Git-basics.
 
 # System Requirements
-Proxmox VE hypervisor <br>
+## Proxmox VE hypervisor
+    Proxmox version 9.1.1
+    Project Hardware requirements:
+        RAM: 10 GB 
+        Disk: 60 GB
+    Cloud-Init template: Ubuntu 22.04.5 LTS / "jammy" 
 
-    tested with version 9.1.1
-Hardware on hypervisor: <br>
-
-    RAM: 10 GB 
-    Disk: 60 GB
-
-Cloud-Init template:  <br>
-
-    Tested with Ubuntu 22.04.5 LTS / "jammy"
-
-Workstation<br>
-
-    Windows 10/11 or macOS Tahoe 26.4
-
-Software on Workstation: <br>
-
-    Terraform, tested with version 1.14.8
-    Git, tested with git 2.53.0 <br>
+## Workstation Compute
+    OS: Windows 10/11 or macOS Tahoe 26.4
+    Software:
+        Terraform, tested with version 1.14.8
+        Git, tested with git 2.53.0
 
 # Getting Started 
 ## 1. Clone repository from Github
