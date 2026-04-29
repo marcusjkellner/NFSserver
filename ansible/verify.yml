@@ -10,7 +10,7 @@
       register: controller_nfs_test
       changed_when: false
       ignore_errors: yes
-      delegate_to: "{{ groups['controller'][0] }}"
+      delegate_to: localhost
 
     - name: Test NFS port 2049 is reachable from clientLegal to fileserver
       ansible.builtin.command: nc -zv {{ groups['fileserver'][0] }} 2049
@@ -31,7 +31,7 @@
       register: controller_ssh_test
       changed_when: false
       ignore_errors: yes
-      delegate_to: "{{ groups['controller'][0] }}"
+      delegate_to: localhost
 
     - name: Test SSH port 22 is BLOCKED from clientLegal to fileserver
       ansible.builtin.command: nc -zv -w 3 {{ groups['fileserver'][0] }} 22
