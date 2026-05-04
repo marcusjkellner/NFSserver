@@ -325,14 +325,14 @@ A. Look if it possible to dissalow SSH root log-in
 # Security analysis
 
 ## NFS Protocol
-In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is LInux-exclusive. However, the protocol not very secure on its own:
+In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is Linux-exclusive. However, the protocol not very secure on its own:
 - There is no encryption for data at rest or data in transit.
 - It is possible for anyone with physical access to sniff the trafic in plaintext or even tamper with it.
 - There is no strong authentication, NFS relies on GID and UID which can be spoofed
 - If the system is exposed to the internet and/or untrusted users locally NFS needs to be combined with other means of encryption, segmentation and authentication to be considered secure. 
 
 ## Samba Protocol
-SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory,but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
+SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory, but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
 
 ## When to use NFS over Samba
 If all devices run Linux and are isolated from other networks and the internet it provides fast file transefer and feels simillar to using your own local storage. 
@@ -359,3 +359,42 @@ Currently we have no segmentation between our VMs. We could consider setting up 
 We also note that currently there is no strong authentication for users Anna_Legal and Peter_Sales, we could add it to separate secrets later on.
 
 # Design Choices and rationale
+
+## Design and topology
+Focus on the basic concepts working, not volume or hardening. 
+### Packages used
+Galaxy: 2.5.9 used for Parted module - idempotent partition management, Filesystem module - disk formatting, UFW module - managing firewall rules. 
+Ansible: 2.10.8. 
+Terraform version: 1.14.8
+NFS-kernel-server: 1:2.6.1-1ubuntu1.2
+NFS-common: 1:2.6.1-1ubuntu1.2
+Git version: 2.53.0
+
+## Proxmox vs Virutalbox
+More resource effektive and closer to reality. Home-lab. Ubuntu distribution.
+
+## Terraform vs Vaygrant
+Terraform is part of hypervisor level 1 setup and was used to communicate with Proxmox. Proxmox - Terraform is closer to realty setup compared to Virtualbox-Vaygrant setup.
+
+## Multiplatform and customized network project 
+We choosed to build the home-lab on our own hardware, using customized own networks and OS for Desktop access. Thats why there are used creation of the ansible inventory file locally.
+
+## VPN / Tailscale
+In order to work remotely we choosed a Tailscale VPN solution, for that we created a separate Tailscele VM.
+
+## NFS vs Samba
+NFS is Linux based only and was easyer to set up for this project. Samba would have been a better option for use with Active Directory and Windows clients.
+
+## Playbook design
+We choose to split our playbooks in to 10 separate steps. This fraqtionality allowed us to build the project in steps and keep things separate that allowed us to test the performance and error handling under the way.
+
+## Groups and users
+We choose to create two user groups and with one user to each group. This enables role-based permissions and keep our project simple. 
+
+## Verification 
+We choose to simulate users attemting to create files in their own and others' directories. Also we simulated their permission rights to their own and the other's direcotries  access directory. The verification is performed with ansible code to proove the indepontence. A quota report is printed a the end of the simulation to prove each user-group quota is working before deleting the simulation files. 
+
+A firewall test is also performed ......
+
+
+
