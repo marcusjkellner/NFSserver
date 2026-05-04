@@ -279,6 +279,48 @@ Quota report printed per user group and per user
 
 
 # Security Measures
+In our lab there is a following security measures applied <br>
+
+1. API token is created on the Proxmox and placed on the tfvars file that provides a secure connection from the Desktop to the Proxmox hypervisor without any root credentials. 
+
+
+2. Root login is only allowed with SSH key and password login is disabled. Expected output: permitrootlogin without-password <br>
+
+        sudo sshd -T | grep permitrootlogin
+
+
+3. Password login is not allowed, only with SSH-key. The SHH keys for all VMs are generated on the creation of Controller VM that secures the Controller's connection with Fileserer, Legal and Sales VMs without password. Expected output: passwordauthentication: no <br>
+
+        sudo sshd -T | grep passwordauthentication
+
+
+4. UFW firewall is active on Filesever VM. Expected output: Status: active. SSH (port 22) connection allowed-in from Controller VM only. NFS (port  2049) allowed-in connection from Clients' (Legal and Sales) VMs port. Default: deny (incomming). No outgoing traffice is blocked. <br>
+
+        sudo ufw status verbose
+
+
+5. Client firewall is active on both Clients' VMs. Expected output, example on Client_Legal. Satus: Active. SSH (port 22) connection allowed-in from Controller VM only. Default: deny (incomming).  <br>
+
+        sudo ufw status verbose 
+
+
+6. Role Based Access Control (RBAC) setup.  Legal and Sales groups have least priviledge permissions to the NFS shares folder based on their roles. Expected output. Users /shares/Common: drwxrwxr-x.  group_Legal /shares/Legal: drwxrws---  .  group_Sales /shares/Sales: drwxrws---  . For more description please view Verify file output. 
+
+
+7. Disk quotas and partition on the Fileserver is set to the hard disk that prevents denial of service by disk exhaustion. Since NFS shares is stored on a separate partition any disc exhaustion attack is limited and the OS partition is unaffected. <br>
+
+        lsblk | grep -E "sda|sdb"
+
+
+8. Secrets management. All the secret-relevant information is placed under nfsserver/terraform.tfvars and nfsserver/terraform.tfstate and stored only locally. Additionally both files is added to .gitignore and never stored in the git repository. Must be deployed from Desktop or Controller VM <br>
+
+        cd NFSserver 
+        cat .gitignore 
+        
+ 
+
+To do:
+A. Look if it possible to dissalow SSH root log-in
 
 # Security analysis
 
