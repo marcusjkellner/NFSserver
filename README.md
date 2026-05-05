@@ -117,7 +117,7 @@ The last manual step is to run verify.yml, which is an ansible playbook describe
 
 
 ### VM:fileserver
-    RAM: 2048 MB 
+    RAM: 2560 MB 
     Cores: 2 
     Disk: 20 GB (10 GB OS + 10 GB Filestoreage /shares) 
 
@@ -132,8 +132,7 @@ Directories on fileserver: <br>
 The last playbook sets quota limits for groups and users, but currently only the group quotas are applied succesfully.
 
 ### VM:client-legal
-Hardware: <br>
-    RAM: 2048 MB 
+    RAM: 2560 MB
     Cores: 2 
     Disk: 10 
 
@@ -142,13 +141,12 @@ This VM is a standard ubuntu server install. Here we create users and groups wit
 Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
 
 ### VM:client-sales
+    RAM: 2560 MB
+    Cores: 2 
+    Disk: 10 
 This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
 
 Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
-
-RAM: 2048 MB <br>
-Cores: 2 <br>
-Disk: 10 <br>
 
 # Folder Structure
 ![Description](./folder_structure.jpg)
@@ -162,7 +160,8 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
 
     endpoint    = "https://192.168.1.200:8006" IP for proxmox endpoint
     nodename    = "pve" local proxmox nodename
-    VMTemplateID    = 1100 The VM-template ID of the cloud-init you want to use for the base of all VM's. WE recommend using Ubuntu 24.4.04 "Jammy"
+    VMTemplateID    = 1100 The VM-template ID of the cloud-init you want to use for the base of all VM's.
+    We recommend using Ubuntu 24.4.04 "Jammy"
 
     vm_gateway  = "192.168.1.1" #Enter the IP of your default gateway (likely your ISP router) 
 
@@ -277,8 +276,6 @@ Printed summary of all the tests in one place
 
 Quota report printed per user group and per user
 
-
-
 # Security Measures
 In our lab there is a following security measures applied <br>
 
@@ -295,12 +292,12 @@ In our lab there is a following security measures applied <br>
         sudo sshd -T | grep passwordauthentication
 
 
-4. UFW firewall is active on Filesever VM. Expected output: Status: active. SSH (port 22) connection allowed-in from Controller VM only. NFS (port  2049) allowed-in connection from Clients' (Legal and Sales) VMs port. Default: deny (incomming). No outgoing traffice is blocked. <br>
+4. UFW firewall is active on Filesever VM. Expected output: Status: active. SSH (port 22) connection allowed-in from Controller VM only. NFS (port  2049) allowed-in connection from Clients' (Legal and Sales) VMs port. Default: deny (incomming). No outgoing traffic is blocked. <br>
 
         sudo ufw status verbose
 
 
-5. Client firewall is active on both Clients' VMs. Expected output, example on Client_Legal. Satus: Active. SSH (port 22) connection allowed-in from Controller VM only. Default: deny (incomming).  <br>
+5. Client firewall is active on both Clients' VMs. Expected output, example on Client_Legal. Satus: Active. SSH (port 22) connection allowed-in from Controller VM only. Default: deny (incomming). No outgoing traffic is blocked. <br>
 
         sudo ufw status verbose 
 
@@ -318,63 +315,44 @@ In our lab there is a following security measures applied <br>
         cd NFSserver 
         cat .gitignore 
         
- 
-
-To do:
-A. Look if it possible to dissalow SSH root log-in
-
 ## Security analysis
 ### No Certificates, only SSH-keys
-### Missing Ansible Tower
+It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms. An internally signed TLS certificate is more secure since SSH keys can get stolen or leaked my mistake.<br>
+Solution: We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.<br>
+Why this is acceptible: The lab network is not directly exposed to the internet and no SSH keys are available online.
 ### No Network Segmentation
-### No Encryption in transit
+Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.<br>
+Solution: In production the fileserver should be separated on an isolated network/vlan without internet access. The client-groups (Legal/Sales) could also be set to their own vlan to restrict lateral movement. <br>
+Why this is acceptible: We prioritized functionality over hardening. Instead we used UFW to enforce default deny incoming traffic. <br>
+### No Encryption in transit btween clients and fileserver
+Since NFS is sent in plaintext it is possible to intercept, tamper with or clone the information in transit. 
+Solution: In production the information could be encrypted before transmission, a VPN tunnel could be set up or we could switch to SAMBA <br>
+Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
 ### No Encryption at rest
+At the moment we do not encrypt data on the fileserver at rest. This means that anyone with access to the disk can read the files on the server in plaintext.
+Solution: We could use encryption like LUKS to encypt data at rest but would need a different solution for data in transit.<br>
+Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
 ### No outgoing UFW rules
+In this lab we wanted to include UFW rules and opted to implement default deny incoming traffic on fileserver and clients. There are no rules enforcing outgoing traffic atm and this means its possible for an attacker or malware exfiltrate information from the fileserver.
+Solution: Configure firewall rules that default deny incoming and outgoing traffic and only allow traffic that is needed. <br>
+Why this is acceptible: We did not want prioritize configuring firewall rules for this lab and will revisit the firewall in the upcoming hardening course. <br>
 ### No NFS user Authentication
+There is no strong authentication for users Anna_Legal and Peter_Sales, this means they cannot log in to their computers. It also means that you could spoof user identity by copying their UID/GID and stealing their SSH key.
+Solution: Generate default passwords for each user and require them to set strong passwords upon logging in for the first time. MFA and/or AD could also be used for stronger authentication.<br>
+Why this is acceptible: We do not want to add default credentials to the lab and we can use ansible to simulate them creating files for verification. <br>
 ### No backup of NFS fileserver contents
+The contents of the fileserver is not backed up on a separate VM, a separate physical device or a separate physical site. This means that any data on the fileserver is lost upon VM destruction.
+Solution: Create one backup that is read-only locally, one that is encrypted on a cloud server and one that is mirrored to an off-site location NAS. <br>
+Why this is acceptible: The files on the fileserver are only used for testing in this lab andd we did not want to dedicate resources for hardening these files. <br>
 
-### No strong SSH-key password
-### Root Access through SSH
-### Root-privileges allow for total control of all files
-### No audit logging or monitoring
-
-### Add strong user passwords for users Anna and Peter
-### Missing fail2Ban to protect against password bruteforce
-### All members in "users" group can write to /Common
-
-## NFS Protocol
-In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is Linux-exclusive. However, the protocol not very secure on its own:
-- There is no encryption for data at rest or data in transit.
-- It is possible for anyone with physical access to sniff the trafic in plaintext or even tamper with it.
-- There is no strong authentication, NFS relies on GID and UID which can be spoofed
-- If the system is exposed to the internet and/or untrusted users locally NFS needs to be combined with other means of encryption, segmentation and authentication to be considered secure. 
-
-## Samba Protocol
-SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory, but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
-
-## When to use NFS over Samba
-If all devices run Linux and are isolated from other networks and the internet it provides fast file transefer and feels simillar to using your own local storage. 
-
-How to improve NFS security:
-- Encrypt data in transit using a VPN or simillar service like Kerberos
-- Segment the devices using NFS onto their own network
-- Encrypt the data at rest with separate encryption method, like LUKS
-Note: Every measure that fascilitates ecryption will come with a hit to perfromance and convenience, either through distribution of encryption keys or passwords.
-
-## Other notes on Security for our particular lab
-It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms.
-
-We have added terraform.vars to .gitignore, it includes information about:
-- API Keys
-- Local OS
-- Local IP-addresses
-- Proxmox host
-
-While we never upload this information to github it would be better to use hashicorp vault to store our secrets.
-
-Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.
-
-We also note that currently there is no strong authentication for users Anna_Legal and Peter_Sales, we could add it to separate secrets later on.
+Other misc vulnerbilities:
+- No strong SSH-key password
+- Root Access through SSH
+- Root-privileges allow for total control of all files
+- No audit logging or monitoring
+- Missing fail2Ban to protect against password bruteforce
+- All members in "users" group can write to /Common
+- Missing Ansible Tower features
 
 # Design Choices and rationale
 
@@ -388,11 +366,10 @@ NFS-kernel-server: 1:2.6.1-1ubuntu1.2
 NFS-common: 1:2.6.1-1ubuntu1.2
 Git version: 2.53.0
 
-## Proxmox vs Virutalbox
-More resource effektive and closer to reality. Home-lab. Ubuntu distribution.
+## Proxmox Terraform vs Virtualbox and Vagrant
+We wanted to learn how to use Proxmox and use a type 1 hypervisor in order to get the most out of the spare computers we keep at home. Using Proxmox with Terraform also seemed closer to reality and working with a cloud production.
 
-## Terraform vs Vaygrant
-Terraform is part of hypervisor level 1 setup and was used to communicate with Proxmox. Proxmox - Terraform is closer to realty setup compared to Virtualbox-Vaygrant setup.
+We got to learn about using Cloud-Init and setting up our own ubuntu template. We do not rely on pre-installed packages but wanted to get everything needed. 
 
 ## Multiplatform and customized network project 
 We choosed to build the home-lab on our own hardware, using customized own networks and OS for Desktop access. Thats why there are used creation of the ansible inventory file locally.
@@ -402,6 +379,25 @@ In order to work remotely we choosed a Tailscale VPN solution, for that we creat
 
 ## NFS vs Samba
 NFS is Linux based only and was easyer to set up for this project. Samba would have been a better option for use with Active Directory and Windows clients.
+
+### NFS Protocol
+In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is Linux-exclusive. However, the protocol not very secure on its own:
+- There is no encryption for data at rest or data in transit.
+- It is possible for anyone with physical access to sniff the trafic in plaintext or even tamper with it.
+- There is no strong authentication, NFS relies on GID and UID which can be spoofed
+- If the system is exposed to the internet and/or untrusted users locally NFS needs to be combined with other means of encryption, segmentation and authentication to be considered secure. 
+
+### Samba Protocol
+SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory, but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
+
+### When to use NFS over Samba
+If all devices run Linux and are isolated from other networks and the internet it provides fast file transefer and feels simillar to using your own local storage. 
+
+### How to improve NFS security
+- Encrypt data in transit using a VPN or simillar service like Kerberos
+- Segment the devices using NFS onto their own network
+- Encrypt the data at rest with separate encryption method, like LUKS
+Note: Every measure that fascilitates ecryption will come with a hit to perfromance and convenience, either through distribution of encryption keys or passwords.
 
 ## Playbook design
 We choose to split our playbooks in to 10 separate steps. This fraqtionality allowed us to build the project in steps and keep things separate that allowed us to test the performance and error handling under the way.
