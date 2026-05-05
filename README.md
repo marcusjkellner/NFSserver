@@ -22,7 +22,7 @@ Total time spent is about three working weeks, including time spent learning Git
 ## System Requirements
 ### Proxmox VE hypervisor
     Proxmox version: 9.1.1
-    Project Hardware requirements:  10GB RAM, 60GB Disk
+    Project Hardware requirements:  11GB RAM, 60GB Disk
     Cloud-Init template: Ubuntu 22.04.5 LTS / "jammy" 
 
 ### Workstation Computer
@@ -66,7 +66,7 @@ The Controller should already have the latest version of this repository downloa
 Once the playbook is finished you can run a separate playbook called verify.yml which will run a few tests verifying the UFW-configuration, user permissions and disk qouta. For more details see "Verification" below.
 
 # Project Architecture
-![Description](./topology_02-nfsclients.jpg)
+![Description](./topology-07.jpg)
 
 ## Workstation (Mac or Windows)
 We use Terraform from our respective workstations to create our infrastructure.
@@ -254,12 +254,13 @@ verify.yml <br>
     
 
 # Verification
-The verification playbook contains 3 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality. In short:
+The verification playbook contains 4 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality. In short:
+    - Netcat is used to check ports on the VMs according to the UFW-rules. They check that the controller VM can use port 22 to reach all other VMs and that the fileserver is allowing port 2049 for NSF traffic from the client VMs.
     - Anna (a user from the Legal group) creates files in /Common and /Legal
     - Peter (a user from the Sales group) views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
     - Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
 
-To add: traffic control!!! And a ping between VLANs (if we manage)
+
 
 # Expected output
 Anna can creates files in /Common
@@ -322,7 +323,24 @@ In our lab there is a following security measures applied <br>
 To do:
 A. Look if it possible to dissalow SSH root log-in
 
-# Security analysis
+## Security analysis
+### No Certificates, only SSH-keys
+### Missing Ansible Tower
+### No Network Segmentation
+### No Encryption in transit
+### No Encryption at rest
+### No outgoing UFW rules
+### No NFS user Authentication
+### No backup of NFS fileserver contents
+
+### No strong SSH-key password
+### Root Access through SSH
+### Root-privileges allow for total control of all files
+### No audit logging or monitoring
+
+### Add strong user passwords for users Anna and Peter
+### Missing fail2Ban to protect against password bruteforce
+### All members in "users" group can write to /Common
 
 ## NFS Protocol
 In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is Linux-exclusive. However, the protocol not very secure on its own:
@@ -394,7 +412,7 @@ We choose to create two user groups and with one user to each group. This enable
 ## Verification 
 We choose to simulate users attemting to create files in their own and others' directories. Also we simulated their permission rights to their own and the other's direcotries  access directory. The verification is performed with ansible code to proove the indepontence. A quota report is printed a the end of the simulation to prove each user-group quota is working before deleting the simulation files. 
 
-A firewall test is also performed ......
+During the verification we also ensure to use netcat to check ports on the VMs from clients and controller in order to verify the different UFW rules we have set in place. The rules are currently pretty rudimentary and is focused on setting default deny on incoming traffic to the fileserver and clients while maintaining functionality over SSH and NFS ports.
 
 
 

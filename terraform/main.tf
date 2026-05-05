@@ -102,7 +102,7 @@ resource "proxmox_virtual_environment_vm" "fileserver" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 2560
   }
 
 # os disk

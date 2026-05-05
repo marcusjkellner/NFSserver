@@ -15,7 +15,7 @@ resource "proxmox_virtual_environment_vm" "clientLegal" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 2560
   }
 
   disk {
@@ -50,6 +50,7 @@ resource "proxmox_virtual_environment_vm" "clientLegal" {
     user        = var.clientLegal_username
     private_key = file("~/.ssh/id_ed25519")
     host        = split("/", var.clientLegal_ip)[0]
+    timeout     = "10m"
   }
 
   provisioner "remote-exec" {
@@ -73,10 +74,10 @@ resource "proxmox_virtual_environment_vm" "clientSales" {
 
   cpu {
     cores = 2
-  }
+  }  
 
   memory {
-    dedicated = 2048
+    dedicated = 2560
   }
 
   disk {
@@ -111,6 +112,7 @@ resource "proxmox_virtual_environment_vm" "clientSales" {
     user        = var.clientSales_username
     private_key = file("~/.ssh/id_ed25519")
     host        = split("/", var.clientSales_ip)[0]
+    timeout     = "10m"
   }
 
   provisioner "remote-exec" {
