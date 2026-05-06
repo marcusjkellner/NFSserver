@@ -1,23 +1,59 @@
 # Automated NFS-Fileserver Lab
-## Table of Contents
-- [Project Description](#project-description)
-- [System Requirements](#system-requirements)
-- [Getting Started](#getting-started)
-
 ## Project Description
     Project Name: Automated NFS-Fileserver Lab
     Authors: Marcus Kellner & Ivo Urbanovics
     Class: ITS25
     Course: Virtualization & Automation 
-    Date: 2026-04-29 
-    Branch: 07-UFW 
+    Date: 2026-05-06 
+    Branch: 08-polish2 
 This is a lab built by Marcus and Ivo during the spring of 2026 as part of a vocational university course called Virtualization and Automation ("Virtualiseringsteknik och Automation" in Swedish). 
 
 The project will instruct a Proxmox server to create several virtual machines using Terraform and configures the VMs with Ansible to install one NFS fileserver and two NFS client VMs. Two groups of users are created, shares are created on the fileserver and mounted automatically on the clients. Permissions and qoutas are assigned per group.
 
 Our purpose was to learn how to create and document infrastructure as code while being able to manage it effectively by keeping idempotency preserved. The project also served as an introduction to working with GIT using the terminal and we have chosen to preserve our development branches to document our progress.
 
-Total time spent is about three working weeks, including time spent learning Git-basics.
+Total time spent is about four working weeks, including time spent learning Git-basics.
+
+## Table of Contents
+- [System Requirements](#system-requirements)
+- [Getting Started](#getting-started)
+
+## Project Architecture
+![Description](./topology-07.jpg)
+
+## Environment variables, IPs and secrets
+See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
+    os_type = "windows" 
+    //OS-type, can be set to "windows" or "mac"
+
+    api_token       = "" 
+    //You need to create an API token in proxmox for terraform use and enter it here
+    
+    ssh_public_key  = "" 
+    //Enter a public ssh key for your workstation host
+
+    endpoint        = "https://192.168.1.200:8006"
+    //IP for proxmox endpoint
+
+    nodename        = "pve" 
+    //local proxmox nodename
+
+    VMTemplateID    = 1100 
+    //The VM-template ID of the cloud-init you want to use for the base of all VM's.
+    //We recommend using Ubuntu 24.4.04 "Jammy"
+
+    vm_gateway      = "192.168.1.1" 
+    //Enter the IP of your default gateway (likely your ISP router IP) 
+
+    controller_ip   = "192.168.1.41/24" //Ansible control node
+    fileserver_ip   = "192.168.1.42/24" //NFS fileserver
+    clientLegal_ip  = "192.168.1.43/24" //Legal client VM
+    clientSales_ip  = "192.168.1.44/24" //Sales client VM
+    //These are the IPs that will be used for VMs.
+    //Notice that they all needto be on the same subnet.
+
+## Folder Structure
+![Description](./folder_structure.jpg)
 
 ## System Requirements
 ### Proxmox VE hypervisor
@@ -65,13 +101,11 @@ The Controller should already have the latest version of this repository downloa
     ansible-playbook verify.yml
 Once the playbook is finished you can run a separate playbook called verify.yml which will run a few tests verifying the UFW-configuration, user permissions and disk qouta. For more details see "Verification" below.
 
-# Project Architecture
-![Description](./topology-07.jpg)
-
-## Workstation (Mac or Windows)
+## Project Components
+### Workstation: Windows or Mac
 We use Terraform from our respective workstations to create our infrastructure.
 
-## Hypervisor (Proxmox, type 1)
+### Hypervisor: Proxmox node
 To create and host our infrastructure we use Proxmox in our repective homelab environments.
 This means that we need to expose IP-addresses to variables in order to adapt our code for both setups. 
 
@@ -81,11 +115,12 @@ In order to use terraform we both needed to create separate terraform API-keys. 
 
 Tailscale: In order to access our proxmox host for the on-site presentation, we will connect to one of our homelabs using Tailscale.
 
-## Virtual Machines
-### VM:ansible-controller
-    RAM: 4096 MB 
-    Cores: 2 
-    Disk: 10 
+### VM: Ansible Controller
+    Name:   ansible-controller
+    ID:     2041    
+    RAM:    4096 MB 
+    Cores:  2 
+    Disk:   10 
 
 This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created.
 
@@ -99,100 +134,73 @@ The last Terraform action is to create a dynamic inventory.ini-file based on the
 
 From here, all configuration is done using ansible on the ansible controller.
 
-Manual steps at the point of writing: <br>
-ansible controller: switch to development branch: 02-nfsclient <br>
-ansible controller: start site.yml, which will play all our playbook files: <br>
+Manual steps at the point of writing:
 
-    - 01_nfs_install
-    - 02_nfs_users 
-    - 03a_nfs_setup_disk 
-    - 03b_nfs_shares 
-    - 04_nfs_exports 
-    - 05_client_install 
-    - 06_client_mount 
-    - 07_client_shares 
-    - 08_nfs_quotas 
+    ssh controller@192.168.1.41
+    cd /NFSserver/ansible 
+SSH into ansible_controller and move into the /ansible directory before running the ansible playbooks.<br>
+Note: If you changed the IP for ansible_controller in terraform.vars, make sure you use the IP you entered there.
 
-The last manual step is to run verify.yml, which is an ansible playbook described in more detail below.
+1. Run site.yml to start Ansible configuration playbooks:
 
+        ansible-playbook site.yml
 
-### VM:fileserver
-    RAM: 2560 MB 
-    Cores: 2 
-    Disk: 20 GB (10 GB OS + 10 GB Filestoreage /shares) 
+2. Run verify.yml to verify that permissions, firewall rules and connectivity are working.
+
+        ansible-playbook verify.yml
+
+### VM: NFS Fileserver
+    Name:   fileserver
+    ID:     2042
+    RAM:    2560 MB 
+    Cores:  2 
+    Disk:   20 GB (10 GB OS + 10 GB Filestorage) 
 
 After creation, we format a separate partition for filestorage as /shares with support for quotas using Ansible. Ansible is used to install NFS, create users and groups, create the directories the users will share and start the NFS service.
 
-Directories on fileserver: <br>
-/shares <br>
-    /shares/Common - all users can read and write <br>
-    /shares/Legal - only Legal-group can read and write <br>
-    /shares/Sales - only Sales-group can read and write <br>
+Directories on fileserver:
+
+    /shares
+        /shares/Common - all users can read and write 
+        /shares/Legal - only Legal-group can read and write 
+        /shares/Sales - only Sales-group can read and write 
 
 The last playbook sets quota limits for groups and users, but currently only the group quotas are applied succesfully.
 
-### VM:client-legal
-    RAM: 2560 MB
-    Cores: 2 
-    Disk: 10 
+### VM: Legal Department Client PC
+    Name:   client-legal
+    ID:     2043
+    RAM:    2560 MB
+    Cores:  2 
+    Disk:   10 GB  
 
 This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
 
 Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
 
-### VM:client-sales
-    RAM: 2560 MB
-    Cores: 2 
-    Disk: 10 
+### VM: Sales Department Client PC
+    Name:   client-sales
+    ID:     2044
+    RAM:    2560 MB
+    Cores:  2 
+    Disk:   10 GB
+
 This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
 
-Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
+Note: Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
 
-# Folder Structure
-![Description](./folder_structure.jpg)
+### Ansible playbooks
+#### **01_nfs_install.yml**
+Updates the system with apt update, downloads nfs filserver and quote tools.
 
-# Environment variables, IPs and secrets
-See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
-    os_type = "windows" 
-    //OS-type, can be set to "windows" or "mac"
+#### **02_nfs_users.yml**
+Creates two user groups: Legal and Sales.
 
-    api_token       = "" 
-    //You need to create an API token in proxmox for terraform use and enter it here
-    
-    ssh_public_key  = "" 
-    //Enter a public ssh key for your workstation host
+Creates two different users, one for Legal, (Anna_Legal) and one for Sales (Peter_Sales).
 
-    endpoint        = "https://192.168.1.200:8006"
-    //IP for proxmox endpoint
+Each group and user are assigned their explicit GID and UID.
 
-    nodename        = "pve" 
-    //local proxmox nodename
-
-    VMTemplateID    = 1100 
-    //The VM-template ID of the cloud-init you want to use for the base of all VM's.
-    //We recommend using Ubuntu 24.4.04 "Jammy"
-
-    vm_gateway      = "192.168.1.1" 
-    //Enter the IP of your default gateway (likely your ISP router IP) 
-
-    controller_ip   = "192.168.1.41/24" //Ansible control node
-    fileserver_ip   = "192.168.1.42/24" //NFS fileserver
-    clientLegal_ip  = "192.168.1.43/24" //Legal client VM
-    clientSales_ip  = "192.168.1.44/24" //Sales client VM
-    //These are the IPs that will be used for VMs.
-    //Notice that they all needto be on the same subnet.
-
-# Ansible playbooks
-**01_nfs_install.yml**
-
-    Updates the system with apt update, downloads nfs filserver and quote tools.
-
-**02_nfs_users.yml**
-
-    Creates two user groups: Legal and Sales.
-    Creates two different users, one for Legal, (Anna_Legal) and one for Sales (Peter_Sales)
-    Each group and user are assigned their explicit GID and UID.
-        Note: These groups and users are created identically on the fileserver and all clients.
+Note: These groups and users are created identically on the fileserver and all clients.
 
 **03_nfs_setup_disk.yml**
 
@@ -265,9 +273,9 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
     This playbook runs a test to verify lab's functionality, for details please reference the Verification section below.
     
 
-# Verification
+## Verification
 The verification playbook contains 4 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality.
-## Verification Steps
+### Verification Steps
 Step 1:
 
     Netcat is used to check ports on the VMs according to the UFW-rules. They check that the controller VM can use port 22 to reach all other VMs and that the fileserver is allowing port 2049 for NSF traffic from the client VMs.
@@ -284,7 +292,7 @@ Step 4:
 
     Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
 
-## Expected Terminal output
+### Expected Terminal output
 Firewall Test:
 
         "=======================================",
@@ -331,7 +339,8 @@ User Permissions Report:
         "=======================================",
         "======================================="
 
-# Security Measures
+## Security
+## Security Measures Taken
 In our lab there is a following security measures applied:
 
 1. API token is created on the Proxmox and placed on the tfvars file that provides a secure connection from the Desktop to the Proxmox hypervisor without any root credentials. 
@@ -370,8 +379,8 @@ In our lab there is a following security measures applied:
         cd NFSserver 
         cat .gitignore 
         
-## Security analysis
-### 1. No Certificates, only SSH-keys
+### Security Vulnerbility Analysis
+#### 1. No Certificates, only SSH-keys
 It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms. An internally signed TLS certificate is more secure since SSH keys can get stolen or leaked my mistake.
 
 **Solution:**
@@ -382,27 +391,27 @@ We could set up a CA to issue our internal TLS certificate or use party service 
 
 The lab network is not directly exposed to the internet and no SSH keys are available online.
 
-### 2. No Network Segmentation
+#### 2. No Network Segmentation
 Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.<br>
 Solution: In production the fileserver should be separated on an isolated network/vlan without internet access. The client-groups (Legal/Sales) could also be set to their own vlan to restrict lateral movement. <br>
 Why this is acceptible: We prioritized functionality over hardening. Instead we used UFW to enforce default deny incoming traffic. <br>
-### 3. No Encryption in transit btween clients and fileserver
+#### 3. No Encryption in transit btween clients and fileserver
 Since NFS is sent in plaintext it is possible to intercept, tamper with or clone the information in transit. 
 Solution: In production the information could be encrypted before transmission, a VPN tunnel could be set up or we could switch to SAMBA <br>
 Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
-### No Encryption at rest
+#### No Encryption at rest
 At the moment we do not encrypt data on the fileserver at rest. This means that anyone with access to the disk can read the files on the server in plaintext.
 Solution: We could use encryption like LUKS to encypt data at rest but would need a different solution for data in transit.<br>
 Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
-### No outgoing UFW rules
+#### No outgoing UFW rules
 In this lab we wanted to include UFW rules and opted to implement default deny incoming traffic on fileserver and clients. There are no rules enforcing outgoing traffic atm and this means its possible for an attacker or malware exfiltrate information from the fileserver.
 Solution: Configure firewall rules that default deny incoming and outgoing traffic and only allow traffic that is needed. <br>
 Why this is acceptible: We did not want prioritize configuring firewall rules for this lab and will revisit the firewall in the upcoming hardening course. <br>
-### No NFS user Authentication
+#### No NFS user Authentication
 There is no strong authentication for users Anna_Legal and Peter_Sales, this means they cannot log in to their computers. It also means that you could spoof user identity by copying their UID/GID and stealing their SSH key.
 Solution: Generate default passwords for each user and require them to set strong passwords upon logging in for the first time. MFA and/or AD could also be used for stronger authentication.<br>
 Why this is acceptible: We do not want to add default credentials to the lab and we can use ansible to simulate them creating files for verification. <br>
-### No backup of NFS fileserver contents
+#### No backup of NFS fileserver contents
 The contents of the fileserver is not backed up on a separate VM, a separate physical device or a separate physical site. This means that any data on the fileserver is lost upon VM destruction.
 Solution: Create one backup that is read-only locally, one that is encrypted on a cloud server and one that is mirrored to an off-site location NAS. <br>
 Why this is acceptible: The files on the fileserver are only used for testing in this lab andd we did not want to dedicate resources for hardening these files. <br>
@@ -416,58 +425,87 @@ Other misc vulnerbilities:
 - All members in "users" group can write to /Common
 - Missing Ansible Tower features
 
-# Design Choices and rationale
+## Design Choices and rationale
 
-## Design and topology
+### Design and topology
 Focus on the basic concepts working, not volume or hardening. 
-### Packages used
-Galaxy: 2.5.9 used for Parted module - idempotent partition management, Filesystem module - disk formatting, UFW module - managing firewall rules. 
-Ansible: 2.10.8. 
-Terraform version: 1.14.8
-NFS-kernel-server: 1:2.6.1-1ubuntu1.2
-NFS-common: 1:2.6.1-1ubuntu1.2
-Git version: 2.53.0
+### Packages Used
+Workstations:
 
-## Proxmox Terraform vs Virtualbox and Vagrant
+    Git version: 2.53.0
+    //To commit project code to public git-repo
+
+    Terraform version: 1.14.8
+    //To run Terraform files with Proxmox
+
+ansible-controller:
+
+    Git version: 2.53.0 
+    //To clone public repo from Github
+
+    Ansible version: 2.10.8
+    //To run Ansible Playbooks in git-repo
+
+    Ansible Galaxy version: 2.5.9
+    //[Parted] module: partition management
+    //[Filesystem] module: disk formatting
+    //[UFW] module: UFW firewall rules.
+
+
+fileserver:
+
+    NFS-kernel-serve version: 1:2.6.1-1ubuntu1.2
+    //To start the NFS-service 
+
+    Quota Utilities version: 4.06
+    //To create quotas on the filestorage-partition
+
+client-legal & client-sales 
+
+    NFS-common version: 1:2.6.1-1ubuntu1.2
+    //To interface with the NFS service from clients
+
+
+### Proxmox Terraform vs Virtualbox and Vagrant
 We wanted to learn how to use Proxmox and use a type 1 hypervisor in order to get the most out of the spare computers we keep at home. Using Proxmox with Terraform also seemed closer to reality and working with a cloud production.
 
 We got to learn about using Cloud-Init and setting up our own ubuntu template. We do not rely on pre-installed packages but wanted to get everything needed. 
 
-## Multiplatform and customized network project 
+### Multiplatform and customized network project 
 We choosed to build the home-lab on our own hardware, using customized own networks and OS for Desktop access. Thats why there are used creation of the ansible inventory file locally.
 
-## VPN / Tailscale
+### VPN / Tailscale
 In order to work remotely we choosed a Tailscale VPN solution, for that we created a separate Tailscele VM.
 
-## NFS vs Samba
+### NFS vs Samba
 NFS is Linux based only and was easyer to set up for this project. Samba would have been a better option for use with Active Directory and Windows clients.
 
-### NFS Protocol
+#### NFS Protocol
 In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is Linux-exclusive. However, the protocol not very secure on its own:
 - There is no encryption for data at rest or data in transit.
 - It is possible for anyone with physical access to sniff the trafic in plaintext or even tamper with it.
 - There is no strong authentication, NFS relies on GID and UID which can be spoofed
 - If the system is exposed to the internet and/or untrusted users locally NFS needs to be combined with other means of encryption, segmentation and authentication to be considered secure. 
 
-### Samba Protocol
+#### Samba Protocol
 SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory, but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
 
-### When to use NFS over Samba
+#### When to use NFS over Samba
 If all devices run Linux and are isolated from other networks and the internet it provides fast file transefer and feels simillar to using your own local storage. 
 
-### How to improve NFS security
+#### How to improve NFS security
 - Encrypt data in transit using a VPN or simillar service like Kerberos
 - Segment the devices using NFS onto their own network
 - Encrypt the data at rest with separate encryption method, like LUKS
 Note: Every measure that fascilitates ecryption will come with a hit to perfromance and convenience, either through distribution of encryption keys or passwords.
 
-## Playbook design
+### Playbook design
 We choose to split our playbooks in to 10 separate steps. This fraqtionality allowed us to build the project in steps and keep things separate that allowed us to test the performance and error handling under the way.
 
-## Groups and users
+### Groups and users
 We choose to create two user groups and with one user to each group. This enables role-based permissions and keep our project simple. 
 
-## Verification 
+### Verification 
 We choose to simulate users attemting to create files in their own and others' directories. Also we simulated their permission rights to their own and the other's direcotries  access directory. The verification is performed with ansible code to proove the indepontence. A quota report is printed a the end of the simulation to prove each user-group quota is working before deleting the simulation files. 
 
 During the verification we also ensure to use netcat to check ports on the VMs from clients and controller in order to verify the different UFW rules we have set in place. The rules are currently pretty rudimentary and is focused on setting default deny on incoming traffic to the fileserver and clients while maintaining functionality over SSH and NFS ports.
