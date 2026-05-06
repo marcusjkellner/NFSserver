@@ -188,12 +188,42 @@ Currently users Anna_Legal and Peter_Sales are created on both clients and the f
 This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
 
 Note: Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
+### Terraform files
+**main.tf**<br>
+
+**clients.tf**<br>
+
+**template.tfvars**<br>
+
+**terraform.tfvars**<br>
+
+**variables.tf**<br>
+
+**versions.tf**<br>
+
+**providers.tf**<br>
+
+### Ansible files
+**ansible.cfg**<br>
+Configuration file for Ansible.
+
+    [defaults]
+    inventory = inventory.ini
+    host_key_checking = False
+    pipelining = true
+
+- inventory.ini is set as the default inventory.
+- host key checking is disabled for ansible in order to let ansible to SSH without fingerprinting.
+- pipelining is set to true in order for our verify-script to change users when performing the tests.
+
+**inventory.ini**<br>
+This file is used to define roles with IPs, users and SSH key locations. In this project we generate the ansible inventory file upon running main.tf in order to inject user defined IP-addresses from the environment variables set in terraform.tfvars.
 
 ### Ansible playbooks
-#### **01_nfs_install.yml**
+**01_nfs_install.yml**<br>
 Updates the system with apt update, downloads nfs filserver and quote tools.
 
-#### **02_nfs_users.yml**
+**02_nfs_users.yml**
 Creates two user groups: Legal and Sales.
 
 Creates two different users, one for Legal, (Anna_Legal) and one for Sales (Peter_Sales).
@@ -240,25 +270,29 @@ Note: These groups and users are created identically on the fileserver and all c
 
     Configures an 'exports' directory that tells the NFS server what directories to share and who can acess them, it also reloads the changed configuration and starts the the NFS server service.
 
-**06_client_install.yml**
+**06_nfs_ufw.yml**
 
     Installs the NFS-client package on all clients.
 
-**07_client_mount.yml**
+**07_client_install.yml**
+
+    Installs the NFS-client package on all clients.
+
+**08_client_mount.yml**
 
     Creates mounting points on all clients:
     /mnt/Common
     /mnt/Legal
     /mnt/Sales
 
-**08_client_shares.yml**
+**09_client_shares.yml**
 
     Mounts mnt/shares on all clients to reference the directories on the fileserver:
         /mnt/Common > fileserver /shares/Common
         /mnt/Legal > fileserver /shares/Legal
         /mnt/Sales > fileserver /shares/Sales
 
-**09_nfs_quotas.yml**
+**10_nfs_quotas.yml**
 
     Remounts /shares on the fileserver and sets quotas for both groups and users:
         Create quota files
@@ -268,6 +302,10 @@ Note: These groups and users are created identically on the fileserver and all c
         Set quote for Anna_Legal max 1.2 GB 
         Set quote for Peter_Sales max 1.2 GB 
 
+**site.yml**
+
+    This playbook runs a test to verify lab's functionality, for details please reference the Verification section below.
+ 
 **verify.yml**
 
     This playbook runs a test to verify lab's functionality, for details please reference the Verification section below.
@@ -417,6 +455,8 @@ Solution: Create one backup that is read-only locally, one that is encrypted on 
 Why this is acceptible: The files on the fileserver are only used for testing in this lab andd we did not want to dedicate resources for hardening these files. <br>
 
 Other misc vulnerbilities:
+- Host key checking is disabled for ansible, this means fingerprinting is not required for SSH
+    - This can be solved by pre-populating a known-hosts file during initial provisioning.
 - No strong SSH-key password
 - Root Access through SSH
 - Root-privileges allow for total control of all files
