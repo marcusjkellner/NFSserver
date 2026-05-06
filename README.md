@@ -1,5 +1,4 @@
 # Automated NFS-Fileserver Lab
-## Project Description
     Project Name: Automated NFS-Fileserver Lab
     Authors: Marcus Kellner & Ivo Urbanovics
     Class: ITS25
@@ -15,13 +14,20 @@ Our purpose was to learn how to create and document infrastructure as code while
 Total time spent is about four working weeks, including time spent learning Git-basics.
 
 ## Table of Contents
+- [Project Architecture](#project-architecture)
+- [Environment variables & Secrets](#environment-variables-&-secrets)
+- [Folder Structure](#folder-structure)
 - [System Requirements](#system-requirements)
 - [Getting Started](#getting-started)
+- [Project Components](#project-components)
+- [Verification](#verification)
+- [Security](#security)
+- [Design Choices](#design-choices)
 
 ## Project Architecture
 ![Description](./topology-07.jpg)
 
-## Environment variables, IPs and secrets
+## Environment variables & Secrets
 See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
     os_type = "windows" 
     //OS-type, can be set to "windows" or "mac"
@@ -465,7 +471,7 @@ Other misc vulnerbilities:
 - All members in "users" group can write to /Common
 - Missing Ansible Tower features
 
-## Design Choices and rationale
+## Design Choices
 
 ### Design and topology
 Focus on the basic concepts working, not volume or hardening. 
