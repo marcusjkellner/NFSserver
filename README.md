@@ -21,7 +21,7 @@ Total time spent is about four working weeks, including time spent learning Git-
 ## Project Architecture
 ![Description](./topology-07.jpg)
 
-## Environment variables, IPs and secrets
+## Environment, IPs and secrets
 See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
     os_type = "windows" 
     //OS-type, can be set to "windows" or "mac"
@@ -188,20 +188,36 @@ Currently users Anna_Legal and Peter_Sales are created on both clients and the f
 This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
 
 Note: Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
+
 ### Terraform files
 **main.tf**<br>
+Defines two virtual machines: ansibe_controller and fileserver. Ansible_controller is VM provisioned with Ansible. It generates it's own ssh key pari that is used to connect to other VMs in the network. Finally, it clones the publc Git repo. 
 
 **clients.tf**<br>
+Defines two virtual machines: client-legal, client-sales. 
 
 **template.tfvars**<br>
+A template for your terraform.tfvars file. This is the secret file that stays on your desktop. 
 
 **terraform.tfvars**<br>
+The secret file, where you enter your:
+- OS type
+- Proxmox api token
+- Desktopt's ssh public key
+- Proxmox endpoint with the port
+- Proxmoxx nodename
+- VM template ID
+- VM gateway IP
+- IP addresses for the VMs
 
 **variables.tf**<br>
+The variable file where we define all variables used by Terraform. 
 
 **versions.tf**<br>
+In the version file there are declared all the dependecies that Proxmox is using.
 
 **providers.tf**<br>
+Here we define the provider, that in our case is Proxmox.
 
 ### Ansible files
 **ansible.cfg**<br>
