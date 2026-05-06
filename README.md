@@ -153,37 +153,53 @@ Currently users Anna_Legal and Peter_Sales are created on both clients and the f
 
 # Environment variables, IPs and secrets
 See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
-    os_type = "windows" OS-type, can be set to "windows" or "mac"
+    os_type = "windows" 
+    //OS-type, can be set to "windows" or "mac"
 
-    api_token      = "" You need to create an API token in proxmox for terraform use and enter it here
-    ssh_public_key = "" Enter a public ssh key for your workstation host
+    api_token       = "" 
+    //You need to create an API token in proxmox for terraform use and enter it here
+    
+    ssh_public_key  = "" 
+    //Enter a public ssh key for your workstation host
 
-    endpoint    = "https://192.168.1.200:8006" IP for proxmox endpoint
-    nodename    = "pve" local proxmox nodename
-    VMTemplateID    = 1100 The VM-template ID of the cloud-init you want to use for the base of all VM's.
-    We recommend using Ubuntu 24.4.04 "Jammy"
+    endpoint        = "https://192.168.1.200:8006"
+    //IP for proxmox endpoint
 
-    vm_gateway  = "192.168.1.1" #Enter the IP of your default gateway (likely your ISP router) 
+    nodename        = "pve" 
+    //local proxmox nodename
 
-    controller_ip   = "192.168.1.41/24" IP of the ansible control node
-    fileserver_ip   = "192.168.1.42/24" IP of the NFS fileserver
-    clientLegal_ip  = "192.168.1.43/24" IP of the Legal client VM
-    clientSales_ip  = "192.168.1.44/24" IP of the Sales client VM
+    VMTemplateID    = 1100 
+    //The VM-template ID of the cloud-init you want to use for the base of all VM's.
+    //We recommend using Ubuntu 24.4.04 "Jammy"
+
+    vm_gateway      = "192.168.1.1" 
+    //Enter the IP of your default gateway (likely your ISP router IP) 
+
+    controller_ip   = "192.168.1.41/24" //Ansible control node
+    fileserver_ip   = "192.168.1.42/24" //NFS fileserver
+    clientLegal_ip  = "192.168.1.43/24" //Legal client VM
+    clientSales_ip  = "192.168.1.44/24" //Sales client VM
+    //These are the IPs that will be used for VMs.
+    //Notice that they all needto be on the same subnet.
 
 # Ansible playbooks
-01_nfs_install <br>
-    Updates the system with apt update and downloads nfs filserver and quote tools.
+**01_nfs_install.yml**
 
-02_nfs_users <br>
+    Updates the system with apt update, downloads nfs filserver and quote tools.
+
+**02_nfs_users.yml**
+
     Creates two user groups: Legal and Sales.
     Creates two different users, one for Legal, (Anna_Legal) and one for Sales (Peter_Sales)
     Each group and user are assigned their explicit GID and UID.
         Note: These groups and users are created identically on the fileserver and all clients.
 
-03a_nfs_setup_disk <br>
-    Creates a new partition and formats it for use with the quote-system. 
+**03_nfs_setup_disk.yml**
+
+    Creates a new partition and formats it for use with the quote-system.
+
     Creates the /shares directory on the new partition and mounts /shares for file storage.
-    There are checks that measures if the disk is present and have been formatted at least once in order to preserve ideompotency.<br>
+    There are checks that measures if the disk is present and have been formatted at least once in order to preserve ideompotency.
     
         /shares 
             mode: 0755
@@ -192,7 +208,7 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
                 Others can read, enter, not write
     /etc/fstab is configured for automount on reboot.
 
-03b_nfs_shares <br>
+**04_nfs_shares.yml**
 
     Creates three directory types: 
 
@@ -212,77 +228,116 @@ See the file "template.tfvars", copy this file and rename it as "terraform.tfvar
                 Sales can read, write, enter
                 Others blocked
 
-04_nfs_exports <br>
+**05_nfs_exports.yml**
 
-    Configures a permanent directory 'exports' that tells the NFS server the direcories to share and who can acess them, it also reloads the changed configuration and starts the the NFS server service.
+    Configures an 'exports' directory that tells the NFS server what directories to share and who can acess them, it also reloads the changed configuration and starts the the NFS server service.
 
-05_client_install <br>
+**06_client_install.yml**
 
-    Installs the NFS-client package on all clients
+    Installs the NFS-client package on all clients.
 
-06_client_mount <br>
+**07_client_mount.yml**
 
-    Creates mounting points on all clients
+    Creates mounting points on all clients:
     /mnt/Common
     /mnt/Legal
     /mnt/Sales
 
-07_client_shares <br>
+**08_client_shares.yml**
 
-    Mounts mnt/shares to reference the directories on the fileserver 
+    Mounts mnt/shares on all clients to reference the directories on the fileserver:
         /mnt/Common > fileserver /shares/Common
         /mnt/Legal > fileserver /shares/Legal
         /mnt/Sales > fileserver /shares/Sales
 
-08_nfs_quotas <br>
+**09_nfs_quotas.yml**
 
-    This playbook remounts /shares on the fileserver and sets quotas for both groups and users. 
-    Quotas work for users now and groups now.
-
-        Remounts /shares to apply quota options 
+    Remounts /shares on the fileserver and sets quotas for both groups and users:
         Create quota files
         Turn the quotas on
         Set quote for group-Legal max 5GB
         Set quote for group-Sales max 5GB
-        Set quote for Anna_Legal max 1.2 GB #Not Active
-        Set quote for Peter_Sales max 1.2 GB #Not Active
+        Set quote for Anna_Legal max 1.2 GB 
+        Set quote for Peter_Sales max 1.2 GB 
 
-verify.yml <br>
+**verify.yml**
 
-    This playbook runs a test to verify lab's functionality, for details look on the section below.
+    This playbook runs a test to verify lab's functionality, for details please reference the Verification section below.
     
 
 # Verification
-The verification playbook contains 4 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality. In short:
-    - Netcat is used to check ports on the VMs according to the UFW-rules. They check that the controller VM can use port 22 to reach all other VMs and that the fileserver is allowing port 2049 for NSF traffic from the client VMs.
-    - Anna (a user from the Legal group) creates files in /Common and /Legal
-    - Peter (a user from the Sales group) views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
-    - Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
+The verification playbook contains 4 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality.
+## Verification Steps
+Step 1:
 
+    Netcat is used to check ports on the VMs according to the UFW-rules. They check that the controller VM can use port 22 to reach all other VMs and that the fileserver is allowing port 2049 for NSF traffic from the client VMs.
 
+Step 2:
 
-# Expected output
-Anna can creates files in /Common
-Anna can creates files in /Legal
-Anna is permission denied in /Sales
+    Anna (a user from the Legal group) creates files in /Common and /Legal
 
-Peter can creates files in /Common
-Peter can creates files in /Sales
-Peter is permission denied in /Legal
+Step 3:
 
-Erase all the created test files in this section
+    Peter (a user from the Sales group) views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
 
-Printed summary of all the tests in one place 
+Step 4:
 
-Quota report printed per user group and per user
+    Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
+
+## Expected Terminal output
+Firewall Test:
+
+        "=======================================",
+        "===    UFW FIREWALL TEST SUMMARY    ===",
+        "=======================================",
+        "FILESERVER:",
+        "  NFS (2049) from controller  → BLOCKED : PASS ✅",
+        "  NFS (2049) from clientLegal → ALLOWED : PASS ✅",
+        "  NFS (2049) from clientSales → ALLOWED : PASS ✅",
+        "  SSH (22)   from controller  → ALLOWED : PASS ✅",
+        "  SSH (22)   from clientLegal → BLOCKED : PASS ✅",
+        "  SSH (22)   from clientSales → BLOCKED : PASS ✅",
+        "======================================="
+
+Qouta Report:
+
+        "=======================================",
+        "===    VERIFICATION SUMMARY         ===",
+        "=======================================",
+        "  /mnt/Common → CAN write    : PASS ✅",
+        "  /mnt/Legal  → CAN write    : PASS ✅",
+        "  /mnt/Sales  → ACCESS DENIED: PASS ✅",
+        "---------------------------------------",
+        "PETER_SALES (from clientSales):",
+        "  /mnt/Common → CAN write    : PASS ✅",
+        "  /mnt/Sales  → CAN write    : PASS ✅",
+        "  /mnt/Legal  → ACCESS DENIED: PASS ✅",
+        "=======================================",
+        "======================================="
+
+User Permissions Report:
+
+        "=======================================",
+        "===    VERIFICATION SUMMARY         ===",
+        "=======================================",
+        "  /mnt/Common → CAN write    : PASS ✅",
+        "  /mnt/Legal  → CAN write    : PASS ✅",
+        "  /mnt/Sales  → ACCESS DENIED: PASS ✅",
+        "---------------------------------------",
+        "PETER_SALES (from clientSales):",
+        "  /mnt/Common → CAN write    : PASS ✅",
+        "  /mnt/Sales  → CAN write    : PASS ✅",
+        "  /mnt/Legal  → ACCESS DENIED: PASS ✅",
+        "=======================================",
+        "======================================="
 
 # Security Measures
-In our lab there is a following security measures applied <br>
+In our lab there is a following security measures applied:
 
 1. API token is created on the Proxmox and placed on the tfvars file that provides a secure connection from the Desktop to the Proxmox hypervisor without any root credentials. 
 
 
-2. Root login is only allowed with SSH key and password login is disabled. Expected output: permitrootlogin without-password <br>
+2. Root login is only allowed with SSH key and password login is disabled. Expected output: permitrootlogin without-password
 
         sudo sshd -T | grep permitrootlogin
 
@@ -316,15 +371,22 @@ In our lab there is a following security measures applied <br>
         cat .gitignore 
         
 ## Security analysis
-### No Certificates, only SSH-keys
-It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms. An internally signed TLS certificate is more secure since SSH keys can get stolen or leaked my mistake.<br>
-Solution: We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.<br>
-Why this is acceptible: The lab network is not directly exposed to the internet and no SSH keys are available online.
-### No Network Segmentation
+### 1. No Certificates, only SSH-keys
+It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms. An internally signed TLS certificate is more secure since SSH keys can get stolen or leaked my mistake.
+
+**Solution:**
+
+We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.
+
+**Why this is acceptible:**
+
+The lab network is not directly exposed to the internet and no SSH keys are available online.
+
+### 2. No Network Segmentation
 Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.<br>
 Solution: In production the fileserver should be separated on an isolated network/vlan without internet access. The client-groups (Legal/Sales) could also be set to their own vlan to restrict lateral movement. <br>
 Why this is acceptible: We prioritized functionality over hardening. Instead we used UFW to enforce default deny incoming traffic. <br>
-### No Encryption in transit btween clients and fileserver
+### 3. No Encryption in transit btween clients and fileserver
 Since NFS is sent in plaintext it is possible to intercept, tamper with or clone the information in transit. 
 Solution: In production the information could be encrypted before transmission, a VPN tunnel could be set up or we could switch to SAMBA <br>
 Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
