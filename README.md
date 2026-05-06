@@ -44,13 +44,14 @@ Note: These IP addresses are the default in template.tfvars, when you set up you
 
 ## System Requirements
 ### Proxmox VE hypervisor
+    RAM:    11 GB
+    Disk:   60 GB
     Proxmox version: 9.1.1
-    Project Hardware requirements:  11GB RAM, 60GB Disk
     Cloud-Init template: Ubuntu 22.04.5 LTS / "jammy" 
 
 ### Workstation Computer
     OS: Windows 10/11 or macOS Tahoe 26.4
-    Software:
+    Software Installed:
         Terraform version: 1.14.8
         Git version: 2.53.0
 
@@ -92,34 +93,31 @@ Once the playbook is finished you can run a separate playbook called verify.yml.
     ansible-playbook verify.yml 
 ## Project Components
 ### Workstation: Windows or Mac
-We use Terraform from our respective workstations to create our infrastructure.
+- Marcus is using a Windows Desktop
+- Ivo is using a Macbook Air
+- The project is designed to execute on either workstation without maintaining different versions of the code.
 
 ### Hypervisor: Proxmox node
-To create and host our infrastructure we use Proxmox in our repective homelab environments.
-This means that we need to expose IP-addresses to variables in order to adapt our code for both setups. 
-
-For our VMs we have created a template from cloud-init. It's a Ubuntu server 22.04.5 LTS / jammy
-
-In order to use terraform we both needed to create separate terraform API-keys. These are never uploaded to github.
-
-Tailscale: In order to access our proxmox host for the on-site presentation, we will connect to one of our homelabs using Tailscale.
-
+- To create and host our infrastructure we use Proxmox in our repective homelab environments. This means that we need to assign IP-addresses to variables in order to adapt our code for both setups. 
+- For our VMs we have created a template from cloud-init. It's a Ubuntu server 22.04.5 LTS / jammy.
+- In order to use terraform with Proxmox we both needed to create separate API-keys. These are never uploaded to github.
+- In order to access our proxmox host for the on-site presentation, we will connect to one of our homelabs using Tailscale.
 ### VM: Ansible Controller
-    Name:   ansible-controller
-    ID:     2041    
-    RAM:    4096 MB 
-    Cores:  2 
-    Disk:   10 GB
+- This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created and later configured with Ansible.
 
-This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created and later configured with Ansible.
-
+        Name:   ansible-controller
+        ID:     2041    
+        RAM:    4096 MB 
+        Cores:  2 
+        Disk:   10 GB
 ### VM: NFS Fileserver
-    Name:   fileserver
-    ID:     2042
-    RAM:    2560 MB 
-    Cores:  2 
-    Disk:   20 GB (10 GB OS + 10 GB Filestorage) 
-This VM is set up as an NFS fileserver which the clients will connect to using NSF.<br>
+- This VM is set up as an NFS fileserver which the clients will connect to using NSF.
+
+        Name:   fileserver
+        ID:     2042
+        RAM:    2560 MB 
+        Cores:  2 
+        Disk:   20 GB (10 GB OS + 10 GB Filestorage) 
 Directories on fileserver:
 
     /shares
@@ -127,27 +125,28 @@ Directories on fileserver:
         /shares/Legal - only Legal-group can read and write 
         /shares/Sales - only Sales-group can read and write
 ### VM: Legal Department Client PC
-    Name:   client-legal
-    ID:     2043
-    RAM:    2560 MB
-    Cores:  2 
-    Disk:   10 GB  
-This client is created for the Legal team to connect to the NFS fileserver.
-### VM: Sales Department Client PC
-    Name:   client-sales
-    ID:     2044
-    RAM:    2560 MB
-    Cores:  2 
-    Disk:   10 GB
-This client is created for the Sales team to connect to the NFS fileserver.
+- This client is created for the Legal team to connect to the NFS fileserver.
 
+        Name:   client-legal
+        ID:     2043
+        RAM:    2560 MB
+        Cores:  2 
+        Disk:   10 GB  
+### VM: Sales Department Client PC
+- This client is created for the Sales team to connect to the NFS fileserver.
+
+        Name:   client-sales 
+        ID:     2044
+        RAM:    2560 MB
+        Cores:  2 
+        Disk:   10 GB
 ### Terraform files
 **main.tf**<br>
 Defines two virtual machines: 
 - ansible_controller
-- fileserver. 
+- fileserver 
 
-Ansible_controller is the only VM provisioned in Terraform since Ansible can be used to provision the remaining VMs after this step:
+ansible_controller is the only VM provisioned in Terraform since Ansible can be used to provision the remaining VMs after this step:
 - APT cache is updated.
 - Ansible is installed.
 - Ansible Galaxy 2.5.9 is installed.
@@ -185,17 +184,18 @@ The secret file, where you enter your:
 **ansible.cfg**<br>
 - Configuration file for Ansible.
 
-    [defaults]
-    inventory = inventory.ini
-    host_key_checking = False
-    pipelining = true
+        [defaults]
+        inventory = inventory.ini
+        host_key_checking = False
+        pipelining = true
 
 - inventory.ini is set as the default inventory.
 - Host key checking is disabled for ansible in order to let ansible to SSH without fingerprinting.
 - pipelining is set to true in order for our verify-script to change users when performing the tests.
 
 **inventory.ini**<br>
-This file is used to define roles with IPs, users and SSH key locations. In this project we generate the ansible inventory file upon running main.tf in order to inject user defined IP-addresses from the environment variables set in terraform.tfvars.
+- Used to define roles with IPs, users and SSH key locations.
+- This file is generated upon running main.tf in order to inject user defined IP-addresses from the environment variables set in terraform.tfvars.
 
 ### Ansible playbooks
 **01_nfs_install.yml**<br>
@@ -258,9 +258,10 @@ This file is used to define roles with IPs, users and SSH key locations. In this
 
 **09_client_shares.yml**<br>
 - Mounts mnt/shares on both clients to sync with fileserver:
-    /mnt/Common > fileserver /shares/Common
-    /mnt/Legal  > fileserver /shares/Legal
-    /mnt/Sales  > fileserver /shares/Sales
+
+        /mnt/Common > fileserver /shares/Common
+        /mnt/Legal  > fileserver /shares/Legal
+        /mnt/Sales  > fileserver /shares/Sales
 
 **10_nfs_quotas.yml**<br>
 - Remounts /shares on the fileserver.
