@@ -32,12 +32,12 @@ This is the default project environment:
 
 | VM | Role | IP | Description |
 |---|---|---|---|
-|ansible-controller|Ansible control node|192.168.1.41|Runs Ansible playbooks|
+|ansible-controller|Ansible control node|192.168.1.41|Lab orchestration through Ansible|
 |fileserver|NFS Server|192.168.1.42|NFS Fileserver sets up shares|
 |client-legal|Client|192.168.1.43|Client PC for Legal team, mounts NFS shares|
 |client-sales|Client|192.168.1.44|Client PC for Sales team, mounts NFS shares|
 
-Note: These IP addresses are the default in template.tfvars, when you set up your own secrets-file you can set other IPs.
+Note: These IP addresses are the default in template.tfvars, when you set up your own secrets-file you can define your own IPs.
 
 ## Folder Structure
 ![Description](./folder_structure.jpg)
