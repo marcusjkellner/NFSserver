@@ -15,7 +15,7 @@ Total time spent is about four working weeks, including time spent learning Git-
 
 ## Table of Contents
 - [Project Architecture](#project-architecture)
-- [Environment Variables and Secrets](#environment-variables-and-secrets)
+- [Environment and IPs](#environment-and-ips)
 - [Folder Structure](#folder-structure)
 - [System Requirements](#system-requirements)
 - [Getting Started](#getting-started)
@@ -27,36 +27,17 @@ Total time spent is about four working weeks, including time spent learning Git-
 ## Project Architecture
 ![Description](./topology-07.jpg)
 
-## Environment Variables and Secrets
-See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
-    os_type = "windows" 
-    //OS-type, can be set to "windows" or "mac"
+## Environment and IPs
+This is the default project environment:
 
-    api_token       = "" 
-    //You need to create an API token in proxmox for terraform use and enter it here
-    
-    ssh_public_key  = "" 
-    //Enter a public ssh key for your workstation host
+| VM | Role | IP | Description |
+|---|---|---|---|
+|ansible-controller|Ansible control node|192.168.1.41|Runs Ansible playbooks|
+|fileserver|NFS Server|192.168.1.42|NFS Fileserver sets up shares|
+|client-legal|Client|192.168.1.43|Client PC for Legal team, mounts NFS shares|
+|client-sales|Client|192.168.1.44|Client PC for Sales team, mounts NFS shares|
 
-    endpoint        = "https://192.168.1.200:8006"
-    //IP for proxmox endpoint
-
-    nodename        = "pve" 
-    //local proxmox nodename
-
-    VMTemplateID    = 1100 
-    //The VM-template ID of the cloud-init you want to use for the base of all VM's.
-    //We recommend using Ubuntu 24.4.04 "Jammy"
-
-    vm_gateway      = "192.168.1.1" 
-    //Enter the IP of your default gateway (likely your ISP router IP) 
-
-    controller_ip   = "192.168.1.41/24" //Ansible control node
-    fileserver_ip   = "192.168.1.42/24" //NFS fileserver
-    clientLegal_ip  = "192.168.1.43/24" //Legal client VM
-    clientSales_ip  = "192.168.1.44/24" //Sales client VM
-    //These are the IPs that will be used for VMs.
-    //Notice that they all needto be on the same subnet.
+Note: These IP addresses are the default in template.tfvars, when you set up your own secrets-file you can set other IPs.
 
 ## Folder Structure
 ![Description](./folder_structure.jpg)
