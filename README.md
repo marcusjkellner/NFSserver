@@ -56,38 +56,40 @@ Note: These IP addresses are the default in template.tfvars, when you set up you
 
 ## Getting Started 
 ### 1. Clone repository from Github
-    git clone https://github.com/marcusjkellner/NFSserver.git
-    cd NFSserver 
 Download the repository to your workstation, see requirements above.
 
-### 2. Create the shared secrets/env-variables file from template
-    cp /terraform/template.tfvars /terraform/terraform.tfvars
-    nano /terraform/terraform.tfvars    
-Copy the template secrets-file and edit terraform.tfvars with your own environment variables and API-keys. Keep this file secret and local.
+    git clone https://github.com/marcusjkellner/NFSserver.git
+    cd NFSserver
+### 2. Create a secrets-file from template.tfvars
+Copy the template secrets-file and name it terraform.tfvars. 
 
+Follow the instructions in the file to add an API-key, SSH-key and if needed you can also change the environment variables such as the IP-addresses.
+
+    cp /terraform/template.tfvars /terraform/terraform.tfvars
+    nano /terraform/terraform.tfvars
 ### 3. Start VM creation using Terraform
+These instructions will initialize Terraform in the terraform-folder, check for syntax problems and the apply command will start the building process once you type "yes" to confirm. Note: The creation process takes about 6 minutes.
+
     cd terraform 
     terraform init 
     terraform validate
     terraform plan
     terraform apply  
-These instructions will initialize Terraform in the terraform-folder, check for syntax problems and the apply command will start the building process once you type "yes" to confirm. Note: The creation process takes about 6 minutes.
-
 ### 4. SSH into VM: ansible-controller
-    ssh controller@192.168.1.41
 Once complete, it's time to SSH into the ansible controller node.
 
-IMPORTANT NOTE: The IP 192.168.1.41 is the default-template for controller_ip and must match your environment variables in terraform.tfvars!
+    ssh controller@192.168.1.41
 
+IMPORTANT NOTE: The IP 192.168.1.41 is the default-template for controller_ip and must match your environment variables in terraform.tfvars!
 ### 5. Git Pull and Run site.yml to start all playbooks
+The Controller should already have the latest version of this repository downloaded. Move into /ansible and run site.yml. It contains all playbooks necessary for the remaining configuration.
+
     cd ~/NFSserver/ansible 
     ansible-playbook site.yml
-The Controller should already have the latest version of this repository downloaded. Move into /ansible and run site.yml. It contains all playbooks necessary for the remaining configuration. 
+### 6. Verify lab functionality
+Once the playbook is finished you can run a separate playbook called verify.yml. It will run a few tests verifying the UFW-configuration, user permissions and disk qouta. For more details see "Verification" below.
 
-### 6. Verify lab functionality (See verify-section for more info)
-    ansible-playbook verify.yml
-Once the playbook is finished you can run a separate playbook called verify.yml which will run a few tests verifying the UFW-configuration, user permissions and disk qouta. For more details see "Verification" below.
-
+    ansible-playbook verify.yml 
 ## Project Components
 ### Workstation: Windows or Mac
 We use Terraform from our respective workstations to create our infrastructure.
