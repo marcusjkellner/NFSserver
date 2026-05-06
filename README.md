@@ -93,17 +93,17 @@ Once the playbook is finished you can run a separate playbook called verify.yml.
     ansible-playbook verify.yml 
 ## Project Components
 ### Workstation: Windows or Mac
-- Marcus is using a Windows Desktop
-- Ivo is using a Macbook Air
+- Marcus is using a Windows Desktop.
+- Ivo is using a Macbook Air.
 - The project is designed to execute on either workstation without maintaining different versions of the code.
 
 ### Hypervisor: Proxmox node
 - To create and host our infrastructure we use Proxmox in our repective homelab environments. This means that we need to assign IP-addresses to variables in order to adapt our code for both setups. 
 - For our VMs we have created a template from cloud-init. It's a Ubuntu server 22.04.5 LTS / jammy.
-- In order to use terraform with Proxmox we both needed to create separate API-keys. These are never uploaded to github.
-- In order to access our proxmox host for the on-site presentation, we will connect to one of our homelabs using Tailscale.
+- In order to use Terraform with Proxmox we both needed to create separate API-keys. These are never uploaded to github.
+- In order to access our Proxmox host for the on-site presentation, we will connect to one of our homelabs using Tailscale.
 ### VM: Ansible Controller
-- This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created and later configured with Ansible.
+- This is the first VM we create in Terraform. The other VM's are dependant on this VM in order to be created and later configured with Ansible.
 
         Name:   ansible-controller
         ID:     2041    
@@ -142,9 +142,7 @@ Directories on fileserver:
         Disk:   10 GB
 ### Terraform files
 **main.tf**<br>
-Defines two virtual machines: 
-- ansible_controller
-- fileserver 
+- Defines two virtual machines: ansible_controller and fileserver 
 
 ansible_controller is the only VM provisioned in Terraform since Ansible can be used to provision the remaining VMs after this step:
 - APT cache is updated.
@@ -155,13 +153,13 @@ ansible_controller is the only VM provisioned in Terraform since Ansible can be 
 - Controller clones public Git repo
 
 **clients.tf**<br>
-- Defines two virtual machines: client-legal, client-sales. 
+- Defines two virtual machines: client-legal and client-sales. 
 
 **template.tfvars**<br>
 - A template used for creating your terraform.tfvars file.
 
 **terraform.tfvars**<br>
-The secret file, where you enter your:
+The secrets-file, where you enter your:
 - OS type
 - Proxmox api token
 - Desktopt's ssh public key
