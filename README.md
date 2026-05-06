@@ -15,7 +15,7 @@ Total time spent is about four working weeks, including time spent learning Git-
 
 ## Table of Contents
 - [Project Architecture](#project-architecture)
-- [Environment variables & Secrets](#environment-variables-&-secrets)
+- [Environment Variables and Secrets](#environment-variables-and-secrets)
 - [Folder Structure](#folder-structure)
 - [System Requirements](#system-requirements)
 - [Getting Started](#getting-started)
@@ -27,7 +27,7 @@ Total time spent is about four working weeks, including time spent learning Git-
 ## Project Architecture
 ![Description](./topology-07.jpg)
 
-## Environment variables & Secrets
+## Environment Variables and Secrets
 See the file "template.tfvars", copy this file and rename it as "terraform.tfvars". Do NOT upload this info into Github ever, terraform.tfvars has been added to .gitignore to prevent this. <br>
     os_type = "windows" 
     //OS-type, can be set to "windows" or "mac"
