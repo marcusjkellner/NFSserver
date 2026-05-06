@@ -109,34 +109,9 @@ Tailscale: In order to access our proxmox host for the on-site presentation, we 
     ID:     2041    
     RAM:    4096 MB 
     Cores:  2 
-    Disk:   10 
+    Disk:   10 GB
 
-This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created.
-
-The ansible-controller generates an SSH keypair and injects the public key into Terraform so the following VM's will allow the controller to SSH into them with Ansible.
-
-On creatation, the system is updated and ansible is installed.
-After this, ansible galaxy is forced to update to 2.5.9 and the old version 1.3.6 is removed.
-
-Terrform will also git clone our public repository in order to access the ansible code.
-The last Terraform action is to create a dynamic inventory.ini-file based on the local IP-addresses we have enetered into a secret variable file called terraform.tfvars.
-
-From here, all configuration is done using ansible on the ansible controller.
-
-Manual steps at the point of writing:
-
-    ssh controller@192.168.1.41
-    cd /NFSserver/ansible 
-SSH into ansible_controller and move into the /ansible directory before running the ansible playbooks.<br>
-Note: If you changed the IP for ansible_controller in terraform.vars, make sure you use the IP you entered there.
-
-1. Run site.yml to start Ansible configuration playbooks:
-
-        ansible-playbook site.yml
-
-2. Run verify.yml to verify that permissions, firewall rules and connectivity are working.
-
-        ansible-playbook verify.yml
+This is the first VM we create in terraform. The other VM's are dependant on this VM in order to be created and later configured with Ansible.
 
 ### VM: NFS Fileserver
     Name:   fileserver
@@ -144,49 +119,47 @@ Note: If you changed the IP for ansible_controller in terraform.vars, make sure 
     RAM:    2560 MB 
     Cores:  2 
     Disk:   20 GB (10 GB OS + 10 GB Filestorage) 
-
-After creation, we format a separate partition for filestorage as /shares with support for quotas using Ansible. Ansible is used to install NFS, create users and groups, create the directories the users will share and start the NFS service.
-
+This VM is set up as an NFS fileserver which the clients will connect to using NSF.<br>
 Directories on fileserver:
 
     /shares
-        /shares/Common - all users can read and write 
+        /shares/Common - users-group can read and write 
         /shares/Legal - only Legal-group can read and write 
-        /shares/Sales - only Sales-group can read and write 
-
-The last playbook sets quota limits for groups and users, but currently only the group quotas are applied succesfully.
-
+        /shares/Sales - only Sales-group can read and write
 ### VM: Legal Department Client PC
     Name:   client-legal
     ID:     2043
     RAM:    2560 MB
     Cores:  2 
     Disk:   10 GB  
-
-This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
-
-Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
-
+This client is created for the Legal team to connect to the NFS fileserver.
 ### VM: Sales Department Client PC
     Name:   client-sales
     ID:     2044
     RAM:    2560 MB
     Cores:  2 
     Disk:   10 GB
-
-This VM is a standard ubuntu server install. Here we create users and groups with identical UID and GID to match the ones created on the fileserver. 
-
-Note: Currently users Anna_Legal and Peter_Sales are created on both clients and the fileserver simultaneusly.
+This client is created for the Sales team to connect to the NFS fileserver.
 
 ### Terraform files
 **main.tf**<br>
-Defines two virtual machines: ansibe_controller and fileserver. Ansible_controller is VM provisioned with Ansible. It generates it's own ssh key pari that is used to connect to other VMs in the network. Finally, it clones the publc Git repo. 
+Defines two virtual machines: 
+- ansible_controller
+- fileserver. 
+
+Ansible_controller is the only VM provisioned in Terraform since Ansible can be used to provision the remaining VMs after this step:
+- APT cache is updated.
+- Ansible is installed.
+- Ansible Galaxy 2.5.9 is installed.
+- Ansible Galaxy 1.3.6 is removed to make sure 2.5.9 is used.
+- Controller generates own SSH key pair used to connect to other VMs
+- Controller clones public Git repo
 
 **clients.tf**<br>
-Defines two virtual machines: client-legal, client-sales. 
+- Defines two virtual machines: client-legal, client-sales. 
 
 **template.tfvars**<br>
-A template for your terraform.tfvars file. This is the secret file that stays on your desktop. 
+- A template used for creating your terraform.tfvars file.
 
 **terraform.tfvars**<br>
 The secret file, where you enter your:
@@ -200,17 +173,17 @@ The secret file, where you enter your:
 - IP addresses for the VMs
 
 **variables.tf**<br>
-The variable file where we define all variables used by Terraform. 
+- The variable file where we define all variables used by Terraform. 
 
 **versions.tf**<br>
-In the version file there are declared all the dependecies that Proxmox is using.
+- In the version file there are declared all the dependecies that Proxmox is using.
 
 **providers.tf**<br>
-Here we define the provider, that in our case is Proxmox.
+- Here we define the provider, that in our case is Proxmox.
 
 ### Ansible files
 **ansible.cfg**<br>
-Configuration file for Ansible.
+- Configuration file for Ansible.
 
     [defaults]
     inventory = inventory.ini
@@ -218,7 +191,7 @@ Configuration file for Ansible.
     pipelining = true
 
 - inventory.ini is set as the default inventory.
-- host key checking is disabled for ansible in order to let ansible to SSH without fingerprinting.
+- Host key checking is disabled for ansible in order to let ansible to SSH without fingerprinting.
 - pipelining is set to true in order for our verify-script to change users when performing the tests.
 
 **inventory.ini**<br>
@@ -226,95 +199,83 @@ This file is used to define roles with IPs, users and SSH key locations. In this
 
 ### Ansible playbooks
 **01_nfs_install.yml**<br>
-Updates the system with apt update, downloads nfs filserver and quote tools.
+- Updates the fileserver with apt update.
+- Installs nfs on filserver.
+- Installs quota tools on filserver.
 
-**02_nfs_users.yml**
-Creates two user groups: Legal and Sales.
+**02_nfs_users.yml**<br>
+- Creates two user groups: group-Legal and group-Sales.
+- Creates two users: Anna_Legal Peter_Sales.
+- Each group is assigned an explicit GID.
+- Each user is assigned an explicit UID.
+- Groups and users are created identically on the fileserver and both clients.
 
-Creates two different users, one for Legal, (Anna_Legal) and one for Sales (Peter_Sales).
+**03_nfs_setup_disk.yml**<br>
+- Creates a new partition and formats it for use with the quote-system.
+- Check if partition is allready formated.
+- Only format partition if unformated. 
+- Creates the /shares directory on the new partition.
+- Mounts /shares with quota support.
 
-Each group and user are assigned their explicit GID and UID.
+**04_nfs_shares.yml**<br>
+- Creates the directories on the fileserver that will be shared.
 
-Note: These groups and users are created identically on the fileserver and all clients.
-
-**03_nfs_setup_disk.yml**
-
-    Creates a new partition and formats it for use with the quote-system.
-
-    Creates the /shares directory on the new partition and mounts /shares for file storage.
-    There are checks that measures if the disk is present and have been formatted at least once in order to preserve ideompotency.
-    
-        /shares 
-            mode: 0755
-                Root can read, write, enter
-                Legal and Sales can read, enter, not write
-                Others can read, enter, not write
-    /etc/fstab is configured for automount on reboot.
-
-**04_nfs_shares.yml**
-
-    Creates three directory types: 
-
-        /shares/Common 
+        /shares/Common <br>
             mode: 0775
                 Root can read, write, enter
                 Legal and Sales can read, write, enter
-                Others can read, write, enter
+                Users can read, write, enter
         /shares/Legal
-            mode: 0770
+            mode: 2770
                 Root can read, write, enter
                 Legal can read, write, enter
                 Others blocked
         /shares/Sales
-            mode: 0770
+            mode: 2770
                 Root can read, write, enter
                 Sales can read, write, enter
                 Others blocked
 
-**05_nfs_exports.yml**
+**05_nfs_exports.yml**<br>
+- Adds /Common /Legal and /Sales to /etc/exports on the fileserver.
+- Applies NFS exports to be shared on the lab-network.
+- Starts up the NFS service on the fileserver.
 
-    Configures an 'exports' directory that tells the NFS server what directories to share and who can acess them, it also reloads the changed configuration and starts the the NFS server service.
+**06_nfs_ufw.yml**<br>
+- Installs UFW on fileserver and both clients.
+- Configures UFW rules on fileserver and clients separatly.
+- Enables the UFW service once configuration is done.
 
-**06_nfs_ufw.yml**
+**07_client_install.yml**<br>
+- Installs the NFS-client package on both clients.
 
-    Installs the NFS-client package on all clients.
+**08_client_mount.yml**<br>
+- Creates mounting points on both clients:
 
-**07_client_install.yml**
+        /mnt/Common
+        /mnt/Legal
+        /mnt/Sales
 
-    Installs the NFS-client package on all clients.
+**09_client_shares.yml**<br>
+- Mounts mnt/shares on both clients to sync with fileserver:
+    /mnt/Common > fileserver /shares/Common
+    /mnt/Legal  > fileserver /shares/Legal
+    /mnt/Sales  > fileserver /shares/Sales
 
-**08_client_mount.yml**
+**10_nfs_quotas.yml**<br>
+- Remounts /shares on the fileserver.
+- Perform a quota check.
+- Grant users persmission to view their own quota.
+- Set quotas for groups and users.
+- Perform another quotacheck to establish usage.
+- Perform and print a quota report in the terminal.
 
-    Creates mounting points on all clients:
-    /mnt/Common
-    /mnt/Legal
-    /mnt/Sales
-
-**09_client_shares.yml**
-
-    Mounts mnt/shares on all clients to reference the directories on the fileserver:
-        /mnt/Common > fileserver /shares/Common
-        /mnt/Legal > fileserver /shares/Legal
-        /mnt/Sales > fileserver /shares/Sales
-
-**10_nfs_quotas.yml**
-
-    Remounts /shares on the fileserver and sets quotas for both groups and users:
-        Create quota files
-        Turn the quotas on
-        Set quote for group-Legal max 5GB
-        Set quote for group-Sales max 5GB
-        Set quote for Anna_Legal max 1.2 GB 
-        Set quote for Peter_Sales max 1.2 GB 
-
-**site.yml**
-
-    This playbook runs a test to verify lab's functionality, for details please reference the Verification section below.
+**site.yml**<br>
+- This file will run all configuration playbooks in order 1-10.
  
-**verify.yml**
-
-    This playbook runs a test to verify lab's functionality, for details please reference the Verification section below.
-    
+**verify.yml**<br>
+- This playbook runs a test in 4 steps to verify project functionality.
+- For details please reference the Verification section below.    
 
 ## Verification
 The verification playbook contains 4 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality.
