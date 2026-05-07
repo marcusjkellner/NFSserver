@@ -7,12 +7,13 @@
     Branch: 09-polish3 
 This is a lab built by Marcus and Ivo during the spring of 2026 as part of a vocational university course called Virtualization and Automation ("Virtualiseringsteknik och Automation" in Swedish). 
 
-The project will instruct a Proxmox server to create several virtual machines using Terraform and configures the VMs with Ansible to install one NFS fileserver and two NFS client VMs. Two groups of users are created, shares are created on the fileserver and mounted automatically on the clients. Permissions and qoutas are assigned per group.
+The project will instruct a Proxmox server to create several virtual machines using Terraform and configure the VMs with Ansible to install one NFS fileserver and two NFS client VMs. Two groups of users are created, shares are created on the fileserver and mounted automatically on the clients. Permissions and qoutas are assigned per group.
 
 Our purpose was to learn how to create and document infrastructure as code while being able to manage it effectively by keeping idempotency preserved. The project also served as an introduction to working with GIT using the terminal and we have chosen to preserve our development branches to document our progress.
 
-Total time spent is about four working weeks, including time spent learning Git-basics.
+Claude Code Opus 4.6 was used to get started with syntax and core file structure for both Terraform and Ansible files. After this we experimented with our own solutions first and asked for help in troubleshooting. Design choices, and securitiy analisys were done by us and nothing in this documentation was AI-generated. 
 
+Total time spent is about four working weeks, including time spent learning Git-basics.
 ## Table of Contents
 - [Project Architecture](#project-architecture)
 - [Environment and IPs](#environment-and-ips)
@@ -477,9 +478,9 @@ The contents of the fileserver is not backed up on a separate VM, a separate phy
 - Missing Ansible Tower features
 
 ## Design Choices
-### Design and topology
-Focus on the basic concepts working, not volume or hardening. 
-### Packages Used
+### 1. Design and topology
+Focus on getting the basic functionality with Proxmox, Terraform, Ansible and GIT working. Our focus has been on learning the tools, not feature volume or extensive hardening. 
+### 2. Packages Used in project
 Workstations:
 
     Git version: 2.53.0
@@ -501,7 +502,6 @@ ansible-controller:
     //[Filesystem] module: disk formatting
     //[UFW] module: UFW firewall rules.
 
-
 fileserver:
 
     NFS-kernel-serve version: 1:2.6.1-1ubuntu1.2
@@ -514,51 +514,55 @@ client-legal & client-sales
 
     NFS-common version: 1:2.6.1-1ubuntu1.2
     //To interface with the NFS service from clients
+### 3. Proxmox Terraform vs Virtualbox and Vagrant
+We wanted to learn how to use Proxmox and use a type 1 hypervisor in order to get the most out of the spare computers we keep at home. Using Proxmox with Terraform also seemed closer to reality and simillar to a working cloud production.
 
+We got to learn about using Cloud-Init and setting up our own ubuntu template. We do not rely on pre-installed packages, we provision with Ansible as much as possible. 
 
-### Proxmox Terraform vs Virtualbox and Vagrant
-We wanted to learn how to use Proxmox and use a type 1 hypervisor in order to get the most out of the spare computers we keep at home. Using Proxmox with Terraform also seemed closer to reality and working with a cloud production.
+### 4. Multiplatform and customized network project 
+We chose to build the home-lab on our own hardware, using customized own networks and OS for Desktop access. Thats why we generated the ansible inventory file locally.
 
-We got to learn about using Cloud-Init and setting up our own ubuntu template. We do not rely on pre-installed packages but wanted to get everything needed. 
+### 5. VPN / Tailscale
+In order to work remotely we chose a Tailscale VPN solution, for that we created a separate Tailscale VM.
 
-### Multiplatform and customized network project 
-We choosed to build the home-lab on our own hardware, using customized own networks and OS for Desktop access. Thats why there are used creation of the ansible inventory file locally.
+### 6. NFS vs Samba
+NFS is Linux based only and was easier to set up for this project. Samba would have been a better option for use with Active Directory and Windows clients.
 
-### VPN / Tailscale
-In order to work remotely we choosed a Tailscale VPN solution, for that we created a separate Tailscele VM.
-
-### NFS vs Samba
-NFS is Linux based only and was easyer to set up for this project. Samba would have been a better option for use with Active Directory and Windows clients.
-
-#### NFS Protocol
-In our lab we are using the NFS-protocol. It works well, when high performance is needed and the enviroment is Linux-exclusive. However, the protocol not very secure on its own:
+#### 6.1 NFS Protocol
+NFS works well when high performance is needed and the enviroment is Linux-exclusive. However, the protocol is not very secure on its own:
 - There is no encryption for data at rest or data in transit.
 - It is possible for anyone with physical access to sniff the trafic in plaintext or even tamper with it.
-- There is no strong authentication, NFS relies on GID and UID which can be spoofed
+- There is no strong authentication, NFS relies on GID and UID which can be spoofed.
 - If the system is exposed to the internet and/or untrusted users locally NFS needs to be combined with other means of encryption, segmentation and authentication to be considered secure. 
 
-#### Samba Protocol
+#### 6.2 Samba Protocol
 SMB/Samba is better if the environment is shared between Linux and Windows users. It comes with authentication through Active Directory, but that also means Active Directory needs to be configured and managed. It supports encryption through SMB3 and is better suited for connected office environments.
 
-#### When to use NFS over Samba
+#### 6.3 When to use NFS over Samba
 If all devices run Linux and are isolated from other networks and the internet it provides fast file transefer and feels simillar to using your own local storage. 
 
-#### How to improve NFS security
-- Encrypt data in transit using a VPN or simillar service like Kerberos
-- Segment the devices using NFS onto their own network
-- Encrypt the data at rest with separate encryption method, like LUKS
-Note: Every measure that fascilitates ecryption will come with a hit to perfromance and convenience, either through distribution of encryption keys or passwords.
+#### 6.4 How to improve NFS security
+- Encrypt data in transit using a VPN or a service like Kerberos.
+    - Kerberos is a network authentication protocol, tickets instead of passwords.
+- Segment the devices using NFS onto their own network.
+- Encrypt the data at rest with separate encryption method, like LUKS.
 
-### Playbook design
-We choose to split our playbooks in to 10 separate steps. This fraqtionality allowed us to build the project in steps and keep things separate that allowed us to test the performance and error handling under the way.
+### 7. Playbook design
+We chose to split our playbooks in to 10 separate steps. This fraqtionality allowed us to build the project in steps and keep things separate that allowed us to test the performance and error handling along the way.
 
-### Groups and users
-We choose to create two user groups and with one user to each group. This enables role-based permissions and keep our project simple. 
+### 8. Groups and users
+We choose to create two user groups with one user per group. This enables role-based permissions and keep our project simple. 
 
-### Verification 
-We choose to simulate users attemting to create files in their own and others' directories. Also we simulated their permission rights to their own and the other's direcotries  access directory. The verification is performed with ansible code to proove the indepontence. A quota report is printed a the end of the simulation to prove each user-group quota is working before deleting the simulation files. 
+### 9. Verification method
+The verification is performed with ansible code to prove the idempotency.
 
-During the verification we also ensure to use netcat to check ports on the VMs from clients and controller in order to verify the different UFW rules we have set in place. The rules are currently pretty rudimentary and is focused on setting default deny on incoming traffic to the fileserver and clients while maintaining functionality over SSH and NFS ports.
+During the verification we use netcat to check ports on the fileserver from clients and controller in order to verify the different UFW rules we have set in place. The rules are currently pretty rudimentary and is focused on setting default deny on incoming traffic to the fileserver and clients while maintaining functionality over SSH and NFS ports. We elected not to spend time and focus on configuring rules for outgoing traffic at this time.
+
+We choose to simulate users attempting to create files in their own and others' directories. Also we simulated their permission rights to their own and the other's direcotry. 
+
+A quota report is printed a the end of the simulation to prove each user-group quota is working before deleting the simulation files. 
+
+
 
 
 
