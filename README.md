@@ -3,8 +3,8 @@
     Authors: Marcus Kellner & Ivo Urbanovics
     Class: ITS25
     Course: Virtualization & Automation 
-    Date: 2026-05-06 
-    Branch: 08-polish2 
+    Date: 2026-05-07 
+    Branch: 09-polish3 
 This is a lab built by Marcus and Ivo during the spring of 2026 as part of a vocational university course called Virtualization and Automation ("Virtualiseringsteknik och Automation" in Swedish). 
 
 The project will instruct a Proxmox server to create several virtual machines using Terraform and configures the VMs with Ansible to install one NFS fileserver and two NFS client VMs. Two groups of users are created, shares are created on the fileserver and mounted automatically on the clients. Permissions and qoutas are assigned per group.
@@ -279,24 +279,32 @@ The secrets-file, where you enter your:
 ## Verification
 The verification playbook contains 4 separate plays designed to act as users Anna_Legal and Peter_Sales to demonstrate our lab's functionality.
 ### Verification Steps
-Step 1:
+verify.yml contains 4 playbooks designed to perform different types of tests. All tests are performed in this order:
 
-    Netcat is used to check ports on the VMs according to the UFW-rules. They check that the controller VM can use port 22 to reach all other VMs and that the fileserver is allowing port 2049 for NSF traffic from the client VMs.
+Step 1 - Test UFW firewall rules:
+- Netcat is used to check ports on the VMs according to the UFW-rules.
+- fileserver is allowing port 2049 for NSF traffic only from the client VMs.
+- ansible-controller should be able to use port 22 to SSH the other VMs.
+- clients are blocked from using port 22 to SSH into the fileserver.
+- Print test Pass/Fail results to terminal.
 
-Step 2:
+Step 2 - Anna creates files:
+- User Anna_Legal attempts to create a 1 MB testfile in /Common.
+- User Anna_Legal attempts to create a 1 MB testfile in /Legal.
+- User Anna_Legal attempt to enter /Sales, but should be denied.
 
-    Anna (a user from the Legal group) creates files in /Common and /Legal
+Step 3 - Peter creates files:
+- User Peter_Sales attempts to create a 2 MB testfile in /Common.
+- User Peter_Sales attempts to create a 2 MB testfile in /Sales.
+- User Peter_Sales attempt to enter /Legal, but should be denied.
 
-Step 3:
-
-    Peter (a user from the Sales group) views her files in /Common, creates his own file, tries to open /Legal but is denied, proceeds to /Sales and creates a file there.
-
-Step 4:
-
-    Fileserver creates a quota-report of the storage used to display the limits and how much storage is spent.
+Step 4 - Get quota report, print summary and cleanup files:
+- Syncs quota usage and get the quota report.
+- Print quota report to terminal.
+- Print permission summary report from step 2-3.
 
 ### Expected Terminal output
-Firewall Test:
+Firewall Test Summary:
 
         "=======================================",
         "===    UFW FIREWALL TEST SUMMARY    ===",
@@ -310,7 +318,7 @@ Firewall Test:
         "  SSH (22)   from clientSales → BLOCKED : PASS ✅",
         "======================================="
 
-Qouta Report:
+Quota Report:
 
         "=======================================",
         "===    VERIFICATION SUMMARY         ===",

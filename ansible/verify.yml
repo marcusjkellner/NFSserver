@@ -6,7 +6,7 @@
 
   tasks:
     - name: Test NFS port 2049 is BLOCKED from controller to fileserver
-      ansible.builtin.command: nc -zv {{ groups['fileserver'][0] }} 2049
+      ansible.builtin.command: nc -zv -w 3 {{ groups['fileserver'][0] }} 2049
       register: controller_nfs_test
       changed_when: false
       ignore_errors: yes
@@ -83,8 +83,8 @@
       register: anna_sales
       ignore_errors: yes
 
-# ── STEP 3: Peter tests access from clientSales ──────────────────────────────
-- name: Step 3 - Peter tests access
+# ── STEP 3: Peter creates files from clientSales ──────────────────────────────
+- name: Step 3 - Peter creates files
   hosts: clients[1]
   become: true
 
@@ -104,22 +104,12 @@
       register: peter_legal
       ignore_errors: yes
 
-# ── STEP 4: Cleanup, summary and quota report ────────────────────────────────
-- name: Step 4 - Cleanup, summary and quota report
+# ── STEP 4: Get quota report, print summary and cleanup ────────────────────────────────
+- name: Step 4 - Get quota report, print summary and cleanup
   hosts: fileserver
   become: true
 
   tasks:
-    - name: Cleanup test files
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - /shares/Common/anna_common.txt
-        - /shares/Legal/anna_legal.txt
-        - /shares/Common/peter_common.txt
-        - /shares/Sales/peter_sales.txt
-
     - name: Sync quota usage
       ansible.builtin.command: quotacheck -avugm
       changed_when: false
@@ -151,3 +141,12 @@
           - "======================================="
           - "===    Verification complete!       ==="
           - "======================================="
+    - name: Cleanup test files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /shares/Common/anna_common.txt
+        - /shares/Legal/anna_legal.txt
+        - /shares/Common/peter_common.txt
+        - /shares/Sales/peter_sales.txt
