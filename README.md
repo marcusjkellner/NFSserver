@@ -400,36 +400,65 @@ It would be more ideal to use a certificate based approach rather than ssh-keys 
 
 **Solution:**
 - We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.
-
 **Why this is acceptible:**
 - The lab network is not directly exposed to the internet and no SSH keys are available online.
 
-#### 2. No Network Segmentation
-Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.<br>
-Solution: In production the fileserver should be separated on an isolated network/vlan without internet access. The client-groups (Legal/Sales) could also be set to their own vlan to restrict lateral movement. <br>
-Why this is acceptible: We prioritized functionality over hardening. Instead we used UFW to enforce default deny incoming traffic. <br>
-#### 3. No Encryption in transit btween clients and fileserver
-Since NFS is sent in plaintext it is possible to intercept, tamper with or clone the information in transit. 
-Solution: In production the information could be encrypted before transmission, a VPN tunnel could be set up or we could switch to SAMBA <br>
-Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
-#### No Encryption at rest
-At the moment we do not encrypt data on the fileserver at rest. This means that anyone with access to the disk can read the files on the server in plaintext.
-Solution: We could use encryption like LUKS to encypt data at rest but would need a different solution for data in transit.<br>
-Why this is acceptible: In this lab we have not prioritized encryption and the only files on the server are for testing purposes <br>
-#### No outgoing UFW rules
-In this lab we wanted to include UFW rules and opted to implement default deny incoming traffic on fileserver and clients. There are no rules enforcing outgoing traffic atm and this means its possible for an attacker or malware exfiltrate information from the fileserver.
-Solution: Configure firewall rules that default deny incoming and outgoing traffic and only allow traffic that is needed. <br>
-Why this is acceptible: We did not want prioritize configuring firewall rules for this lab and will revisit the firewall in the upcoming hardening course. <br>
-#### No NFS user Authentication
-There is no strong authentication for users Anna_Legal and Peter_Sales, this means they cannot log in to their computers. It also means that you could spoof user identity by copying their UID/GID and stealing their SSH key.
-Solution: Generate default passwords for each user and require them to set strong passwords upon logging in for the first time. MFA and/or AD could also be used for stronger authentication.<br>
-Why this is acceptible: We do not want to add default credentials to the lab and we can use ansible to simulate them creating files for verification. <br>
-#### No backup of NFS fileserver contents
-The contents of the fileserver is not backed up on a separate VM, a separate physical device or a separate physical site. This means that any data on the fileserver is lost upon VM destruction.
-Solution: Create one backup that is read-only locally, one that is encrypted on a cloud server and one that is mirrored to an off-site location NAS. <br>
-Why this is acceptible: The files on the fileserver are only used for testing in this lab andd we did not want to dedicate resources for hardening these files. <br>
+**2. No Network Segmentation**<br>
+Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.
 
-Other misc vulnerbilities:
+**Solution:**
+- In production the fileserver should be separated on an isolated network/vlan without internet access.
+- The client-groups (Legal/Sales) should be set to their own vlan to restrict lateral movement. 
+**Why this is acceptible:**
+- We prioritized functionality over hardening. 
+- UFW was used to enforce default deny incoming traffic (with exceptions).
+
+**3. No Encryption in transit btween clients and fileserver**<br>
+Since NFS is sent in plaintext it is possible to intercept, tamper with or clone the information in transit. 
+
+**Solution:**
+- Information should be encrypted before transmission.
+- VPN tunnel could be set up to protect data in transit.
+- Switch to SAMBA-protocol for more encryption options.
+**Why this is acceptible:**
+- In this lab we have not prioritized encryption. 
+- The files on the server are for testing purposes only.
+
+**4. No Encryption at rest**<br>
+At the moment we do not encrypt data on the fileserver at rest. This means that anyone with access to the disk can read the files on the server in plaintext.
+
+**Solution:**
+- We should use encryption like LUKS to encypt data at rest but would need a different solution for data in transit.
+**Why this is acceptible:**
+- In this lab we have not prioritized encryption.
+- The files on the server are for testing purposes only.
+
+**5. No outgoing UFW rules**<br>
+In this lab we wanted to include UFW rules and opted to implement default deny incoming traffic on fileserver and clients. There are no rules enforcing outgoing traffic atm and this means its possible for an attacker or malware to exfiltrate information from the fileserver.
+
+**Solution:**
+- Configure firewall rules that default deny incoming AND outgoing traffic and only allow traffic that is needed. 
+**Why this is acceptible:**
+- We did not want prioritize configuring firewall rules for this lab and will revisit the firewall in the upcoming hardening course.
+
+**6. No NFS user Authentication**<br>
+There is no strong authentication for users Anna_Legal and Peter_Sales, this means they cannot log in to their computers. It also means that you could spoof user identity by copying their UID/GID and stealing their SSH key.
+
+**Solution:**
+- Generate default passwords for each user and require them to set strong passwords upon logging in for the first time.
+- MFA and/or AD for stronger authentication.
+**Why this is acceptible:**
+- We do not want to add default credentials to the lab and we can use ansible to simulate them creating files during verification.
+
+**7. No backup for NFS fileserver files**<br>
+The contents of the fileserver is not backed up on a separate VM, a separate physical device or a separate physical site. This means that any data on the fileserver is lost upon VM destruction.
+
+**Solution:**
+- Create one backup that is read-only locally, one that is encrypted on a cloud server and one that is mirrored to an off-site location NAS.
+**Why this is acceptible:**
+- The files on the fileserver are only used for testing in this lab and we did not want to dedicate resources and time hardening these files.
+
+**8. Other misc vulnerbilities:**
 - Host key checking is disabled for ansible, this means fingerprinting is not required for SSH
     - This can be solved by pre-populating a known-hosts file during initial provisioning.
 - No strong SSH-key password
@@ -441,7 +470,6 @@ Other misc vulnerbilities:
 - Missing Ansible Tower features
 
 ## Design Choices
-
 ### Design and topology
 Focus on the basic concepts working, not volume or hardening. 
 ### Packages Used
