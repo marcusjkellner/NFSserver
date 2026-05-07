@@ -1,3 +1,4 @@
+#Define clientLegal
 resource "proxmox_virtual_environment_vm" "clientLegal" {
   depends_on = [proxmox_virtual_environment_vm.controller]
 
@@ -55,11 +56,11 @@ resource "proxmox_virtual_environment_vm" "clientLegal" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo '=== Legal Client is Created! ==='"
+      "echo '=== Client Legal is Created! ==='"
     ]
   }
 }
-
+#Define clientSales
 resource "proxmox_virtual_environment_vm" "clientSales" {
   depends_on = [proxmox_virtual_environment_vm.controller]
 
@@ -117,7 +118,7 @@ resource "proxmox_virtual_environment_vm" "clientSales" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo '=== Sales Client is Created! ==='"
+      "echo '=== Client Sales is Created! ==='"
     ]
   }
 }

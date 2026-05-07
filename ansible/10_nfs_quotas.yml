@@ -4,8 +4,8 @@
   become: true
 
   tasks:
-
-    # Remount /shares to ensure quota options are active
+    # Remount /shares to ensure quota options are active.
+    # Reloads the edited fstab file.
     - name: Remount /shares to apply quota options
       ansible.builtin.command: mount -o remount /shares
       changed_when: false
@@ -42,12 +42,11 @@
       ansible.builtin.command: setquota -g Peter_Sales 1000000 1200000 0 0 /shares
       changed_when: false
 
-    # Sync quota usage to show real usage
+    # Refreshing the quota database to show real usage
     - name: Sync quota usage
       ansible.builtin.command: quotacheck -avugm
       changed_when: false
 
-    # Show full quota report
     - name: Show quota report
       ansible.builtin.command: repquota -avs
       register: quota_report

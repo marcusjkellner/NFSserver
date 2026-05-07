@@ -3,6 +3,7 @@
   hosts: clients
   become: true
 
+# Creates mount points (empty directories) on both clients.
   tasks:
     - name: Create mount point for /Common
       ansible.builtin.file:
@@ -22,5 +23,3 @@
     - name: Show done message
       ansible.builtin.debug:
         msg: "=== clients have their mounts created =="
-
-        # Kan vi skriva ut varje klients hostname här? Det hade varit snyggt!

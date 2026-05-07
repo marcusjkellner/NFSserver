@@ -4,12 +4,10 @@
   become: true
   vars:
     client_network: "{{ ansible_default_ipv4.network}}/24"
-    #for now, /24 is a hardcoded prefix, lift out to terraform.tfvars later
 
   tasks:
-    # Configure NFS exports
-
-    # Add /Common folder to export
+    # Configures NFS exports, adds the path to the exports file
+    # Defines which directories are shared on the network
     - name: Add /Common to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
@@ -17,35 +15,29 @@
         state: present
         create: yes
 
-        # Add /Legal folder to export
     - name: Add /Legal to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
         line: "/shares/Legal {{ client_network}}(rw,sync,no_subtree_check)"
         state: present
         
-          # Add /Sales folder to export
     - name: Add /Sales to NFS exports
       ansible.builtin.lineinfile:
         path: /etc/exports
         line: "/shares/Sales {{ client_network}}(rw,sync,no_subtree_check)"
         state: present
 
-
     # Applying the exports
     - name: Apply NFS exports
-      ansible.builtin.command: exportfs -ra # Note: this will always be reported as "changed" by Ansible
+      ansible.builtin.command: exportfs -ra 
+      # Note: this will always be reported as "changed" by Ansible
       
-
-
-    # Start NFS service on Fileserver
     - name: Start and enable NFS
       ansible.builtin.service:
         name: nfs-kernel-server
         state: started
         enabled: yes
 
-    # Print done mesg
     - name: Debug msg done
       ansible.builtin.debug:
         msg: "==== Directories are exported and NFS service enabled! ===="

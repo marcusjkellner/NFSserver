@@ -1,3 +1,5 @@
+
+#Define ansible-controller
 resource "proxmox_virtual_environment_vm" "controller" {
   name      = var.controller_name
   node_name = var.nodename
@@ -47,13 +49,15 @@ resource "proxmox_virtual_environment_vm" "controller" {
     host        = split("/", var.controller_ip)[0]
   }
 
+  # Here we provision ansible_controller with ansible and ansible galaxy
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y ansible",
       "ansible-galaxy collection install community.general:==2.5.9 --force",
       "sudo rm -rf /usr/lib/python3/dist-packages/ansible_collections/community/general",
-      # Generate SSH key pair on controller
+  
+  # Generate SSH key pair on controller
       "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N '' -C 'controller-key'",
       "echo '=== Controller ready, Ansible installed, packet manager Galaxy community.generl installed ==='"
     ]
@@ -61,6 +65,7 @@ resource "proxmox_virtual_environment_vm" "controller" {
 }
 
 # Read controller's public key after it has been generated
+# Windows and Mac has different approach how the Workstation's public ssh key is fetch, this is why we need to separate the code block. 
 data "external" "controller_pubkey" {
   depends_on = [proxmox_virtual_environment_vm.controller]
 
@@ -84,7 +89,7 @@ data "external" "controller_pubkey" {
   ]
 }
 
-
+#Define fileserver
 resource "proxmox_virtual_environment_vm" "fileserver" {
   depends_on = [proxmox_virtual_environment_vm.controller]
 
@@ -155,7 +160,7 @@ resource "proxmox_virtual_environment_vm" "fileserver" {
 }
 
 
-# Test: controller SSHes into fileserver and prints success message
+# Test: controller SSHes into fileserver, clientLegal and clientSales to test connectivity.
 resource "null_resource" "test_controller_to_fileserver" {
   depends_on = [
     proxmox_virtual_environment_vm.controller,
@@ -186,6 +191,7 @@ resource "null_resource" "test_controller_to_fileserver" {
   }
 }
 
+# Provisions controller_ansible to download the git repository with NFSserver project.
 resource "null_resource" "run_ansible" {
   depends_on = [null_resource.test_controller_to_fileserver]
 

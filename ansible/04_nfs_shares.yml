@@ -2,7 +2,7 @@
   hosts: fileserver
   become: true
   
-  
+  #Creates /shares directories ans sets group and user permissions
   tasks:
     - name: Create /shares/Common
       ansible.builtin.file:
@@ -11,7 +11,8 @@
         owner: root
         group: users
         mode: '0775'
-
+  #0775: root and users group can read, write, enter. 
+  # Other users can only read and enter
 
     - name: Create /shares/Legal
       ansible.builtin.file:
@@ -20,7 +21,8 @@
         owner: root
         group: group-Legal
         mode: '2770'
-
+  #2770: only the respective group members can read and write.
+  # other have no access at all
 
     - name: Create /shares/Sales
       ansible.builtin.file:
@@ -30,9 +32,10 @@
         group: group-Sales
         mode: '2770'
         
- 
     - name: Show done message
       ansible.builtin.debug:
         msg: "=== Shared directories created! =="
+
+
 
     

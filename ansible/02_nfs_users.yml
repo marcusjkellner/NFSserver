@@ -4,21 +4,20 @@
   become: true  
   
   tasks:
-  # Create Legal user group
+  # Create Legal and Sales user groups
     - name: User group Legal
       ansible.builtin.group:
         name: group-Legal
         gid: 2001
         state: present
 
-  # Create Sales user group
     - name: User group Sales
       ansible.builtin.group:
         name: group-Sales
         gid: 2002
         state: present
 
-  #Create Legal users 
+  #Create Anna_Legal and Peter_Sales users
     - name: Create user Anna_Legal
       ansible.builtin.user:
         name: Anna_Legal
@@ -27,7 +26,6 @@
         shell: /bin/bash
         create_home: yes
 
-  #Create Sales users 
     - name: Create user Peter_Sales
       ansible.builtin.user:
         name: Peter_Sales

@@ -13,5 +13,3 @@
     - name: Show done message
       ansible.builtin.debug:
         msg: "=== NFS client is installed =="
-
-        # Kan vi skriva ut varje klients hostname här? Det hade varit snyggt!

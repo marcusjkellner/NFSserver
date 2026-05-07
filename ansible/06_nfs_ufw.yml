@@ -3,8 +3,8 @@
   hosts: fileserver
   become: true
 
+# Installs, enables and configures UFW according to the rules on fileserver.
   tasks:
-
     - name: Install UFW
       ansible.builtin.apt:
         name: ufw
@@ -48,8 +48,8 @@
   hosts: clients
   become: true
 
+# Installs, enables and configures UFW according to the rules on both clients.
   tasks:
-
     - name: Install UFW
       ansible.builtin.apt:
         name: ufw

@@ -3,6 +3,8 @@
   hosts: clients
   become: true
 
+  # Mounts /Common, /Legal, /Sales on both clients.
+  # Directs the mounted directories to the respective directory in the fileserver.
   tasks:
     - name: Mount Common shares
       ansible.builtin.mount:
@@ -11,10 +13,8 @@
         fstype: nfs
         opts: rw,sync,hard
         state: mounted
-
-# hard  = never give up if server goes down
-# sync = wait until the file is saved before confirming
-
+  # sync: wait until the file is saved before confirming
+  # hard: never give up if server goes down
 
     - name: Mount Legal shares
       ansible.builtin.mount:
@@ -23,7 +23,6 @@
         fstype: nfs
         opts: rw,sync,hard
         state: mounted
-
 
     - name: Mount Sales shares
       ansible.builtin.mount:
@@ -36,4 +35,4 @@
         
     - name: Show the control message
       ansible.builtin.debug:
-        msg: "==NFS shares are mounted=="
+        msg: "==NFS shares on clients are mounted =="
