@@ -265,7 +265,8 @@ The secrets-file, where you enter your:
 - Remounts /shares on the fileserver.
 - Perform a quota check.
 - Grant users persmission to view their own quota.
-- Set quotas for groups and users.
+- Set quotas for both groups to 4883 MB.
+- Set quotas for both users to 1172 MB.
 - Perform another quotacheck to establish usage.
 - Perform and print a quota report in the terminal.
 
@@ -320,25 +321,30 @@ Firewall Test Summary:
 
 Quota Report:
 
-        "=======================================",
-        "===    VERIFICATION SUMMARY         ===",
-        "=======================================",
-        "  /mnt/Common → CAN write    : PASS ✅",
-        "  /mnt/Legal  → CAN write    : PASS ✅",
-        "  /mnt/Sales  → ACCESS DENIED: PASS ✅",
-        "---------------------------------------",
-        "PETER_SALES (from clientSales):",
-        "  /mnt/Common → CAN write    : PASS ✅",
-        "  /mnt/Sales  → CAN write    : PASS ✅",
-        "  /mnt/Legal  → ACCESS DENIED: PASS ✅",
-        "=======================================",
-        "======================================="
+        "*** Report for group quotas on device /dev/sdb1",
+        "Block grace time: 7days; Inode grace time: 7days",
+        "                        Space limits                File limits",
+        "Group           used    soft    hard  grace    used  soft  hard  grace",
+        "----------------------------------------------------------------------",
+        "root      --     20K      0K      0K              2     0     0       ",
+        "users     --      4K      0K      0K              1     0     0       ",
+        "group-Legal --   1028K   4688M   4883M              2     0     0       ",
+        "group-Sales --   2052K   4688M   4883M              2     0     0       ",
+        "Anna_Legal --   1024K    977M   1172M              1     0     0       ",
+        "Peter_Sales --   2048K    977M   1172M              1     0     0       ",
+        "",
+        "Statistics:",
+        "Total blocks: 8",
+        "Data blocks: 1",
+        "Entries: 6",
+        "Used average: 6.000000"
 
 User Permissions Report:
 
         "=======================================",
         "===    VERIFICATION SUMMARY         ===",
         "=======================================",
+        "ANNA_LEGAL (from clientLegal):",
         "  /mnt/Common → CAN write    : PASS ✅",
         "  /mnt/Legal  → CAN write    : PASS ✅",
         "  /mnt/Sales  → ACCESS DENIED: PASS ✅",
@@ -348,6 +354,7 @@ User Permissions Report:
         "  /mnt/Sales  → CAN write    : PASS ✅",
         "  /mnt/Legal  → ACCESS DENIED: PASS ✅",
         "=======================================",
+        "===    Verification complete!       ===",
         "======================================="
 
 ## Security
