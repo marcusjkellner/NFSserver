@@ -371,11 +371,11 @@ In our lab the following security measures are applied:
 
         sudo sshd -T | grep passwordauthentication
 
-4. UFW firewall is active on filesever. Port 22 connection allowed-in from Controller VM to fileserver. Port 2049 allowed-in connection from both Clients to  fileserver. Default: deny (incomming). No outgoing traffic is blocked.
+4. UFW firewall is active on filesever. Port 22 connection allowed-in from Controller VM to fileserver. Port 2049 allowed-in connection from both Clients to  fileserver. Default: deny (incoming). No outgoing traffic is blocked.
 
         sudo ufw status verbose
 
-5. Client firewall is active on both clients. Port 22 connection allowed-in from Controller to clients. Default: deny (incomming). No outgoing traffic is blocked.
+5. Client firewall is active on both clients. Port 22 connection allowed-in from Controller to clients. Default: deny (incoming). No outgoing traffic is blocked.
 
         sudo ufw status verbose 
 
@@ -395,16 +395,14 @@ In our lab the following security measures are applied:
         cat .gitignore 
         
 ### Security Vulnerbility Analysis
-#### 1. No Certificates, only SSH-keys
+**1. No Certificates, only SSH-keys**<br>
 It would be more ideal to use a certificate based approach rather than ssh-keys for creating trust between our vms. An internally signed TLS certificate is more secure since SSH keys can get stolen or leaked my mistake.
 
 **Solution:**
-
-We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.
+- We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.
 
 **Why this is acceptible:**
-
-The lab network is not directly exposed to the internet and no SSH keys are available online.
+- The lab network is not directly exposed to the internet and no SSH keys are available online.
 
 #### 2. No Network Segmentation
 Currently we have no segmentation between our VMs. We could consider setting up VLANs and separate this project from the rest of our homelabs.<br>
