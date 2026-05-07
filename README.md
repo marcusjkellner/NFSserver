@@ -400,6 +400,7 @@ It would be more ideal to use a certificate based approach rather than ssh-keys 
 
 **Solution:**
 - We could set up a CA to issue our internal TLS certificate or use party service if it was a production environment.
+
 **Why this is acceptible:**
 - The lab network is not directly exposed to the internet and no SSH keys are available online.
 
@@ -409,6 +410,7 @@ Currently we have no segmentation between our VMs. We could consider setting up 
 **Solution:**
 - In production the fileserver should be separated on an isolated network/vlan without internet access.
 - The client-groups (Legal/Sales) should be set to their own vlan to restrict lateral movement. 
+
 **Why this is acceptible:**
 - We prioritized functionality over hardening. 
 - UFW was used to enforce default deny incoming traffic (with exceptions).
@@ -420,6 +422,7 @@ Since NFS is sent in plaintext it is possible to intercept, tamper with or clone
 - Information should be encrypted before transmission.
 - VPN tunnel could be set up to protect data in transit.
 - Switch to SAMBA-protocol for more encryption options.
+
 **Why this is acceptible:**
 - In this lab we have not prioritized encryption. 
 - The files on the server are for testing purposes only.
@@ -429,6 +432,7 @@ At the moment we do not encrypt data on the fileserver at rest. This means that 
 
 **Solution:**
 - We should use encryption like LUKS to encypt data at rest but would need a different solution for data in transit.
+
 **Why this is acceptible:**
 - In this lab we have not prioritized encryption.
 - The files on the server are for testing purposes only.
@@ -438,6 +442,7 @@ In this lab we wanted to include UFW rules and opted to implement default deny i
 
 **Solution:**
 - Configure firewall rules that default deny incoming AND outgoing traffic and only allow traffic that is needed. 
+
 **Why this is acceptible:**
 - We did not want prioritize configuring firewall rules for this lab and will revisit the firewall in the upcoming hardening course.
 
@@ -447,6 +452,7 @@ There is no strong authentication for users Anna_Legal and Peter_Sales, this mea
 **Solution:**
 - Generate default passwords for each user and require them to set strong passwords upon logging in for the first time.
 - MFA and/or AD for stronger authentication.
+
 **Why this is acceptible:**
 - We do not want to add default credentials to the lab and we can use ansible to simulate them creating files during verification.
 
@@ -455,6 +461,7 @@ The contents of the fileserver is not backed up on a separate VM, a separate phy
 
 **Solution:**
 - Create one backup that is read-only locally, one that is encrypted on a cloud server and one that is mirrored to an off-site location NAS.
+
 **Why this is acceptible:**
 - The files on the fileserver are only used for testing in this lab and we did not want to dedicate resources and time hardening these files.
 
